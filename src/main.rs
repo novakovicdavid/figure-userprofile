@@ -130,10 +130,11 @@ fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl
 
     // Initialize services
     let user_service = UserService::new(
-        transaction_starter.clone(), user_repository.clone(),
-        profile_repository.clone(),
-        secure_random_generator);
-    let profile_service = ProfileService::new(profile_repository.clone());
+        Box::new(transaction_starter.clone()), Box::new(user_repository.clone()),
+        Box::new(profile_repository.clone()),
+        Box::new(secure_random_generator));
+
+    let profile_service = ProfileService::new(Box::new(profile_repository.clone()));
 
     // Create service and repository contexts
     let repository_context = RepositoryContext::new(user_repository, profile_repository);

@@ -4,7 +4,7 @@ use crate::infrastructure::traits::TransactionTrait;
 use crate::server_errors::ServerError;
 
 #[async_trait]
-pub trait ProfileRepositoryTrait<T: TransactionTrait>: Send + Sync + Clone {
+pub trait ProfileRepositoryTrait<T: TransactionTrait>: Send + Sync {
     async fn create(&self, transaction: Option<&mut T>, profile: Profile) -> Result<Profile, ServerError>;
     async fn find_by_id(&self, transaction: Option<&mut T>, profile_id: i64) -> Result<Profile, ServerError>;
     async fn find_by_user_id(&self, transaction: Option<&mut T>, user_id: i64) -> Result<Profile, ServerError>;

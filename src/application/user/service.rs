@@ -12,24 +12,20 @@ use crate::infrastructure::secure_rand_generator::RandomNumberGenerator;
 use crate::infrastructure::traits::{TransactionManagerTrait, TransactionTrait};
 
 
-#[derive(Clone)]
-pub struct UserService<TC, T, U, P, R> {
-    transaction_creator: TC,
+pub struct UserService<T> {
+    transaction_creator: Box<dyn TransactionManagerTrait<T>>,
     marker: PhantomData<T>,
-    user_repository: U,
-    profile_repository: P,
-    secure_random_generator: R,
+    user_repository: Box<dyn UserRepositoryTrait<T>>,
+    profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
+    secure_random_generator: Box<dyn RandomNumberGenerator>,
 }
 
-impl<TC, T, U, P, R> UserService<TC, T, U, P, R>
-    where
-        TC: TransactionManagerTrait<T>,
-        T: TransactionTrait,
-        U: UserRepositoryTrait<T>,
-        P: ProfileRepositoryTrait<T>,
-        R: RandomNumberGenerator,
+impl<T> UserService<T> where T: TransactionTrait
 {
-    pub fn new(transaction_creator: TC, user_repository: U, profile_repository: P, secure_random_generator: R) -> Self {
+    pub fn new(transaction_creator: Box<dyn TransactionManagerTrait<T>>,
+               user_repository: Box<dyn UserRepositoryTrait<T>>,
+               profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
+               secure_random_generator: Box<dyn RandomNumberGenerator>) -> Self {
         UserService {
             user_repository,
             profile_repository,
@@ -47,11 +43,8 @@ pub trait UserServiceTrait: Send + Sync {
 }
 
 #[async_trait]
-impl<TC, T, U, P, R> UserServiceTrait for UserService<TC, T, U, P, R>
-    where TC: TransactionManagerTrait<T>, T: TransactionTrait,
-          U: UserRepositoryTrait<T>,
-          P: ProfileRepositoryTrait<T>,
-          R: RandomNumberGenerator {
+impl<T> UserServiceTrait for UserService<T> where T: TransactionTrait
+{
     async fn sign_up(&self, email: &str, password: &str, username: &str) -> Result<(i64, String), ServerError> {
         User::validate_email(email)?;
         User::validate_password(password)?;

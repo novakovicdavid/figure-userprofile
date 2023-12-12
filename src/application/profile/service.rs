@@ -5,13 +5,13 @@ use crate::domain::profile::profile::Profile;
 use crate::infrastructure::traits::TransactionTrait;
 use crate::server_errors::ServerError;
 
-pub struct ProfileService<T, P> {
-    profile_repository: P,
+pub struct ProfileService<T> {
+    profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
     marker: PhantomData<T>,
 }
 
-impl<T: TransactionTrait, P: ProfileRepositoryTrait<T>> ProfileService<T, P> {
-    pub fn new(profile_repository: P) -> Self {
+impl<T: TransactionTrait> ProfileService<T> {
+    pub fn new(profile_repository: Box<dyn ProfileRepositoryTrait<T>>) -> Self {
         Self {
             profile_repository,
             marker: PhantomData::default(),
@@ -27,8 +27,7 @@ pub trait ProfileServiceTrait: Send + Sync {
 }
 
 #[async_trait]
-impl<T, P> ProfileServiceTrait for ProfileService<T, P>
-    where T: TransactionTrait, P: ProfileRepositoryTrait<T> {
+impl<T> ProfileServiceTrait for ProfileService<T> where T: TransactionTrait {
     async fn find_profile_by_id(&self, profile_id: i64) -> Result<Profile, ServerError> {
         self.profile_repository.find_by_id(None, profile_id).await
     }
