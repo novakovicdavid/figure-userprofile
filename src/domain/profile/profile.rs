@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use unicode_segmentation::UnicodeSegmentation;
 use regex::Regex;
-use crate::server_errors::ServerError;
+use crate::domain::profile::errors::ProfileError;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Profile {
@@ -15,7 +15,7 @@ pub struct Profile {
 }
 
 impl Profile {
-    pub fn new(id: i64, username: String, display_name: Option<String>, bio: Option<String>, banner: Option<String>, profile_picture: Option<String>, user_id: i64) -> Result<Self, ServerError> {
+    pub fn new(id: i64, username: String, display_name: Option<String>, bio: Option<String>, banner: Option<String>, profile_picture: Option<String>, user_id: i64) -> Result<Self, ProfileError> {
         Self::validate_username(&username)?;
 
         Ok(Self::new_raw(id, username, display_name, bio, banner, profile_picture, user_id))
@@ -35,11 +35,11 @@ impl Profile {
 
     // Valid username test
     // (alphanumerical, optionally a dash surrounded by alphanumerical characters, 15 character limit)
-    pub fn validate_username(username: &str) -> Result<(), ServerError> {
+    pub fn validate_username(username: &str) -> Result<(), ProfileError> {
         let username_count = username.graphemes(true).count();
 
         if !USERNAME_REGEX.is_match(username) || !(3..=15).contains(&username_count) {
-            return Err(ServerError::InvalidUsername);
+            return Err(ProfileError::InvalidUsername);
         }
 
         Ok(())

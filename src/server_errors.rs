@@ -4,13 +4,13 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum::response::IntoResponse;
 use tracing::{error, Instrument, Span};
+use crate::domain::profile::errors::ProfileError;
+use crate::domain::user::errors::UserError;
 
 #[derive(Debug)]
 pub enum ServerError {
-    InvalidEmail,
-    InvalidUsername,
-    PasswordTooShort,
-    PasswordTooLong,
+    UserError(UserError),
+    ProfileError(ProfileError),
     EmailAlreadyInUse,
     UsernameAlreadyTaken,
     WrongPassword,
@@ -27,10 +27,14 @@ pub enum ServerError {
 impl ServerError {
     pub fn to_str(&self) -> &str {
         match self {
-            ServerError::InvalidEmail => "invalid-email",
-            ServerError::InvalidUsername => "invalid-username",
-            ServerError::PasswordTooShort => "password-too-short",
-            ServerError::PasswordTooLong => "password-too-long",
+            ServerError::UserError(user_error) => match user_error {
+                UserError::InvalidEmail => "invalid-email",
+                UserError::PasswordTooShort => "password-too-short",
+                UserError::PasswordTooLong => "password-too-long",
+            },
+            ServerError::ProfileError(profile_error) => match profile_error {
+                ProfileError::InvalidUsername => "invalid-username"
+            },
             ServerError::EmailAlreadyInUse => "email-already-in-use",
             ServerError::UsernameAlreadyTaken => "username-already-taken",
             ServerError::WrongPassword => "wrong-password",
@@ -40,7 +44,8 @@ impl ServerError {
             ServerError::MissingFieldInForm => "missing-field-in-form",
             ServerError::InvalidMultipart => "invalid-multipart",
             ServerError::ImageDimensionsTooLarge => "image-dimensions-too-large",
-            ServerError::InternalError(_) => "internal-server-error"
+            ServerError::InternalError(_) => "internal-server-error",
+
         }
     }
 }
@@ -61,10 +66,14 @@ impl IntoResponse for ServerError {
         let error_str = self.to_string();
 
         let status_code = match self {
-            ServerError::InvalidEmail => StatusCode::BAD_REQUEST,
-            ServerError::InvalidUsername => StatusCode::BAD_REQUEST,
-            ServerError::PasswordTooShort => StatusCode::BAD_REQUEST,
-            ServerError::PasswordTooLong => StatusCode::BAD_REQUEST,
+            ServerError::UserError(user_error) => match user_error {
+                UserError::InvalidEmail => StatusCode::BAD_REQUEST,
+                UserError::PasswordTooShort => StatusCode::BAD_REQUEST,
+                UserError::PasswordTooLong => StatusCode::BAD_REQUEST,
+            },
+            ServerError::ProfileError(profile_error) => match profile_error {
+                ProfileError::InvalidUsername => StatusCode::BAD_REQUEST
+            },
             ServerError::EmailAlreadyInUse => StatusCode::BAD_REQUEST,
             ServerError::UsernameAlreadyTaken => StatusCode::BAD_REQUEST,
             ServerError::WrongPassword => StatusCode::BAD_REQUEST,
@@ -97,5 +106,17 @@ impl std::error::Error for ServerError {}
 impl PartialEq for ServerError {
     fn eq(&self, other: &Self) -> bool {
         self.to_string() == other.to_string()
+    }
+}
+
+impl From<UserError> for ServerError {
+    fn from(value: UserError) -> Self {
+        ServerError::UserError(value)
+    }
+}
+
+impl From<ProfileError> for ServerError {
+    fn from(value: ProfileError) -> Self {
+        ServerError::ProfileError(value)
     }
 }

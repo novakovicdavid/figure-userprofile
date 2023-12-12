@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use unicode_segmentation::UnicodeSegmentation;
-use crate::server_errors::ServerError;
+use crate::domain::user::errors::UserError;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct User {
@@ -12,7 +12,7 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(id: i64, email: String, password: String, role: String) -> Result<Self, ServerError> {
+    pub fn new(id: i64, email: String, password: String, role: String) -> Result<Self, UserError> {
         Self::validate_email(&email)?;
 
         Ok(Self::new_raw(id, email, password, role))
@@ -28,35 +28,35 @@ impl User {
     }
 
     // Valid email test (OWASP Regex + maximum length of 60 graphemes
-    pub fn validate_email(email: &str) -> Result<(), ServerError> {
+    pub fn validate_email(email: &str) -> Result<(), UserError> {
         let graphemes = email.graphemes(true);
         let mut count = 0;
         for _ in graphemes {
             count += 1;
             if count > 60 {
-                return Err(ServerError::InvalidEmail)
+                return Err(UserError::InvalidEmail)
             }
         }
         if count < 3 {
-            return Err(ServerError::InvalidEmail)
+            return Err(UserError::InvalidEmail)
         }
 
         if !EMAIL_REGEX.is_match(email) {
-            return Err(ServerError::InvalidEmail)
+            return Err(UserError::InvalidEmail)
         }
 
         Ok(())
     }
 
-    pub fn validate_password(password: &str) -> Result<(), ServerError> {
+    pub fn validate_password(password: &str) -> Result<(), UserError> {
         let password_length = password.graphemes(true).count();
 
         if password_length < 8 {
-            return Err(ServerError::PasswordTooShort);
+            return Err(UserError::PasswordTooShort);
         }
 
         if password_length > 128 {
-            return Err(ServerError::PasswordTooLong);
+            return Err(UserError::PasswordTooLong);
         }
 
         Ok(())

@@ -7,7 +7,7 @@ use crate::server_errors::ServerError;
 use rand_core::OsRng;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::user::repository::UserRepositoryTrait;
-use crate::domain::user::User;
+use crate::domain::user::user::User;
 use crate::infrastructure::secure_rand_generator::RandomNumberGenerator;
 use crate::infrastructure::traits::{TransactionManagerTrait, TransactionTrait};
 

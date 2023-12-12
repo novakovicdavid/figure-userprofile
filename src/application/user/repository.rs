@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::domain::user::User;
+use crate::domain::user::user::User;
 use crate::infrastructure::traits::TransactionTrait;
 use crate::server_errors::ServerError;
 
