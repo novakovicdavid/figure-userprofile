@@ -3,7 +3,7 @@ use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::profile::service::ProfileServiceTrait;
 use crate::application::user::repository::UserRepositoryTrait;
 use crate::application::user::service::UserServiceTrait;
-use crate::infrastructure::traits::TransactionTrait;
+use crate::application::transaction::TransactionTrait;
 
 pub trait ContextTrait: Send + Sync {
     type ServiceContext: ServiceContextTrait;

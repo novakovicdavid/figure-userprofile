@@ -1,7 +1,7 @@
 use derive_name::{Name, Named};
 use serde::Serialize;
 use serde_json::{Map, Value};
-use crate::server_errors::ServerError;
+use crate::application::server_errors::ServerError;
 
 pub fn to_json_string<T>(serializable: T) -> Result<String, ServerError>
     where T: Serialize

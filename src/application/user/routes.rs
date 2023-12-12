@@ -1,19 +1,18 @@
 use std::sync::Arc;
 use axum::{Extension, Json};
 use axum::extract::State;
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use cookie::{Cookie, SameSite};
 use serde::Serialize;
 use serde::Deserialize;
 use tower_cookies::Cookies;
 use derive_name::with_name;
+use crate::application::server_errors::ServerError;
 use crate::application::user::service::UserServiceTrait;
 use crate::context::{ContextTrait, ServiceContextTrait};
 use crate::infrastructure::session::{Session, SessionOption};
 use crate::infrastructure::to_json_string::to_json_string_with_name;
 use crate::ServerState;
-use crate::server_errors::ServerError;
 
 #[derive(Deserialize)]
 pub struct SignUpForm {

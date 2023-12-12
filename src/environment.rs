@@ -1,7 +1,7 @@
 use std::env;
 use std::env::VarError;
 use tracing::{error, warn};
-use crate::server_errors::ServerError;
+use crate::application::server_errors::ServerError;
 
 pub struct Environment {
     pub database_url: String,

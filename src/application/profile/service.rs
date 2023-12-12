@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::domain::profile::profile::Profile;
-use crate::infrastructure::traits::TransactionTrait;
-use crate::server_errors::ServerError;
+use crate::application::transaction::TransactionTrait;
+use crate::application::server_errors::ServerError;
 
 pub struct ProfileService<T> {
     profile_repository: Box<dyn ProfileRepositoryTrait<T>>,

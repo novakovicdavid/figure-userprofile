@@ -1,7 +1,7 @@
 use async_trait::async_trait;
+use crate::application::server_errors::ServerError;
 use crate::domain::user::user::User;
-use crate::infrastructure::traits::TransactionTrait;
-use crate::server_errors::ServerError;
+use crate::application::transaction::TransactionTrait;
 
 #[async_trait]
 pub trait UserRepositoryTrait<T: TransactionTrait>: Send + Sync {

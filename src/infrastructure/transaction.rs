@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use sqlx::{PgConnection, Pool, Postgres, Transaction};
-use crate::infrastructure::traits::{TransactionManagerTrait, TransactionTrait};
-use crate::server_errors::ServerError;
+use crate::application::server_errors::ServerError;
+use crate::application::transaction::{TransactionManagerTrait, TransactionTrait};
 
 #[derive(Clone)]
 pub struct PostgresTransactionManager {

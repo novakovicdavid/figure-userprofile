@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use rand_chacha::ChaCha20Rng;
 use rand_core::{RngCore, SeedableRng};
-use crate::server_errors::ServerError;
+use crate::application::server_errors::ServerError;
 
 pub trait RandomNumberGenerator: Send + Sync {
     fn generate(&self) -> Result<u64, ServerError>;

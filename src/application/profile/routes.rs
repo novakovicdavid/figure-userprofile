@@ -11,7 +11,7 @@ use crate::application::profile::service::ProfileServiceTrait;
 use crate::context::{ContextTrait, ServiceContextTrait};
 use crate::infrastructure::session::SessionOption;
 use crate::infrastructure::to_json_string::to_json_string_with_name;
-use crate::server_errors::ServerError;
+use crate::application::server_errors::ServerError;
 use crate::ServerState;
 
 pub async fn get_profile<C: ContextTrait>(State(server_state): State<Arc<ServerState<C>>>, Path(profile_id): Path<i64>) -> impl IntoResponse {

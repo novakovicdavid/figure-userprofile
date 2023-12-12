@@ -30,7 +30,6 @@ use crate::infrastructure::user::repository::UserRepository;
 
 mod domain;
 mod infrastructure;
-mod server_errors;
 mod application;
 mod context;
 mod environment;

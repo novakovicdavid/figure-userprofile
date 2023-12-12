@@ -1,4 +1,3 @@
-pub mod traits;
 pub mod transaction;
 pub mod user;
 pub mod secure_rand_generator;

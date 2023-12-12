@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::server_errors::ServerError;
+use crate::application::server_errors::ServerError;
 
 #[async_trait]
 pub trait TransactionManagerTrait<T: TransactionTrait>: Send + Sync {
