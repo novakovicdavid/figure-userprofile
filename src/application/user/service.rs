@@ -4,10 +4,11 @@ use argon2::{Argon2, Params, PasswordHash, PasswordHasher, PasswordVerifier};
 use argon2::Algorithm::Argon2id;
 use argon2::password_hash::{Error, SaltString};
 use rand_core::OsRng;
+
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::server_errors::ServerError;
 use crate::application::user::repository::UserRepositoryTrait;
-use crate::domain::user::user::User;
+use crate::domain::User;
 use crate::infrastructure::secure_rand_generator::RandomNumberGenerator;
 use crate::application::transaction::{TransactionManagerTrait, TransactionTrait};
 

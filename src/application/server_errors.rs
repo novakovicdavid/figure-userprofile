@@ -4,8 +4,9 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum::response::IntoResponse;
 use tracing::{error, Instrument, Span};
-use crate::domain::profile::errors::ProfileError;
-use crate::domain::user::errors::UserError;
+
+use crate::domain::profile::ProfileError;
+use crate::domain::user::UserError;
 
 #[derive(Debug)]
 pub enum ServerError {

@@ -1,6 +1,7 @@
 use serde::Serialize;
 use derive_name::with_name;
-use crate::domain::profile::profile::Profile;
+
+use crate::domain::Profile;
 
 
 #[derive(Serialize, Debug, PartialEq)]

@@ -1,6 +1,7 @@
 use sqlx::{Error, FromRow, Row};
 use sqlx::postgres::PgRow;
-use crate::domain::profile::profile::Profile;
+
+use crate::domain::Profile;
 
 impl FromRow<'_, PgRow> for Profile {
     fn from_row(row: &PgRow) -> Result<Self, Error> {

@@ -1,7 +1,8 @@
 use std::marker::PhantomData;
 use async_trait::async_trait;
+
 use crate::application::profile::repository::ProfileRepositoryTrait;
-use crate::domain::profile::profile::Profile;
+use crate::domain::Profile;
 use crate::application::transaction::TransactionTrait;
 use crate::application::server_errors::ServerError;
 

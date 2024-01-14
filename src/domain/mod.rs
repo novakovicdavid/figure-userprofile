@@ -1,3 +1,5 @@
-pub mod errors;
-pub mod profile;
 pub mod user;
+pub use user::User;
+
+pub mod profile;
+pub use profile::Profile;
