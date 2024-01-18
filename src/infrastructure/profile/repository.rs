@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres, Row};
+use crate::application::RepositoryError;
 
 use crate::application::profile::repository::ProfileRepositoryTrait;
-use crate::application::server_errors::ServerError;
 use crate::domain::Profile;
 use crate::application::transaction::TransactionTrait;
 use crate::infrastructure::transaction::PostgresTransaction;
@@ -22,7 +22,7 @@ impl ProfileRepository {
 
 #[async_trait]
 impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
-    async fn create(&self, transaction: Option<&mut PostgresTransaction>, profile: Profile) -> Result<Profile, ServerError> {
+    async fn create(&self, transaction: Option<&mut PostgresTransaction>, profile: Profile) -> Result<Profile, RepositoryError> {
         let query_string = r#"
         INSERT INTO profile (username, user_id)
         VALUES ($1, $2)
@@ -40,17 +40,17 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
             .map_err(|e| {
                 match e {
                     sqlx::Error::Database(e) => {
-                        if e.constraint() == Some("profile_username_uindex") {
-                            return ServerError::UsernameAlreadyTaken
+                        if e.constraint().is_some() {
+                            return RepositoryError::ConstraintConflict
                         }
-                        ServerError::InternalError(e.into())
+                        RepositoryError::UnexpectedError(e.into())
                     }
-                    _ => ServerError::InternalError(e.into())
+                    _ => RepositoryError::UnexpectedError(e.into())
                 }
             })
     }
 
-    async fn find_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: i64) -> Result<Profile, ServerError> {
+    async fn find_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: i64) -> Result<Profile, RepositoryError> {
         let query_string = "SELECT * FROM profile WHERE id = $1";
 
         let query =
@@ -64,12 +64,12 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
 
         match query_result {
             Ok(profile) => Ok(profile),
-            Err(sqlx::Error::RowNotFound) => Err(ServerError::ResourceNotFound),
-            Err(e) => Err(ServerError::InternalError(e.into()))
+            Err(sqlx::Error::RowNotFound) => Err(RepositoryError::ResourceNotFound),
+            Err(e) => Err(RepositoryError::UnexpectedError(e.into()))
         }
     }
 
-    async fn find_by_user_id(&self, transaction: Option<&mut PostgresTransaction>, user_id: i64) -> Result<Profile, ServerError> {
+    async fn find_by_user_id(&self, transaction: Option<&mut PostgresTransaction>, user_id: i64) -> Result<Profile, RepositoryError> {
         let query_string = "SELECT * FROM profile WHERE user_id = $1";
 
         let query =
@@ -83,12 +83,12 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
 
         match query_result {
             Ok(profile) => Ok(profile),
-            Err(sqlx::Error::RowNotFound) => Err(ServerError::ResourceNotFound),
-            Err(e) => Err(ServerError::InternalError(e.into()))
+            Err(sqlx::Error::RowNotFound) => Err(RepositoryError::ResourceNotFound),
+            Err(e) => Err(RepositoryError::UnexpectedError(e.into()))
         }
     }
 
-    async fn update_profile_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: i64, display_name: Option<String>, bio: Option<String>) -> Result<(), ServerError> {
+    async fn update_profile_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: i64, display_name: Option<String>, bio: Option<String>) -> Result<(), RepositoryError> {
         let query_string = r#"
         UPDATE profile
         SET display_name = $1, bio = $2,
@@ -106,10 +106,10 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
             None => query.execute(&self.db).await
         }
             .map(|_result| ())
-            .map_err(|e| ServerError::InternalError(e.into()))
+            .map_err(|e| RepositoryError::UnexpectedError(e.into()))
     }
 
-    async fn get_total_profiles_count(&self, transaction: Option<&mut PostgresTransaction>) -> Result<i64, ServerError> {
+    async fn get_total_profiles_count(&self, transaction: Option<&mut PostgresTransaction>) -> Result<i64, RepositoryError> {
         let query_string = "SELECT count(*) FROM profile";
 
         let query = sqlx::query(&query_string);
@@ -119,6 +119,6 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
             None => query.fetch_one(&self.db).await
         }
             .and_then(|row| row.try_get(0))
-            .map_err(|e| ServerError::InternalError(e.into()))
+            .map_err(|e| RepositoryError::UnexpectedError(e.into()))
     }
 }

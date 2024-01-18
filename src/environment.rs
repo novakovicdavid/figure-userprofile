@@ -1,7 +1,7 @@
 use std::env;
 use std::env::VarError;
 use tracing::{error, warn};
-use crate::application::server_errors::ServerError;
+use crate::application::ApplicationError;
 
 pub struct Environment {
     pub database_url: String,
@@ -17,7 +17,7 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new() -> Result<Self, ServerError> {
+    pub fn new() -> Result<Self, ApplicationError> {
         Ok(
             Self {
                 database_url: Self::get_var("DATABASE_URL").expect("No DATABASE_URL env found"),

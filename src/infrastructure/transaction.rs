@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use sqlx::{PgConnection, Pool, Postgres, Transaction};
-use crate::application::server_errors::ServerError;
-use crate::application::transaction::{TransactionManagerTrait, TransactionTrait};
+
+use crate::application::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
 
 #[derive(Clone)]
 pub struct PostgresTransactionManager {
@@ -18,10 +18,10 @@ impl PostgresTransactionManager {
 
 #[async_trait]
 impl TransactionManagerTrait<PostgresTransaction> for PostgresTransactionManager {
-    async fn create(&self) -> Result<PostgresTransaction, ServerError> {
+    async fn create(&self) -> Result<PostgresTransaction, TransactionError> {
         self.db.begin().await
             .map(PostgresTransaction::new)
-            .map_err(|e| ServerError::InternalError(e.into()))
+            .map_err(|e| TransactionError::UnexpectedError(e.into()))
     }
 }
 
@@ -40,9 +40,9 @@ impl PostgresTransaction {
 #[async_trait]
 impl TransactionTrait for PostgresTransaction {
     type Inner = PgConnection;
-    async fn commit(self) -> Result<(), ServerError> {
+    async fn commit(self) -> Result<(), TransactionError> {
         self.transaction.commit().await
-            .map_err(|e| ServerError::InternalError(e.into()))
+            .map_err(|e| TransactionError::UnexpectedError(e.into()))
     }
 
     fn inner(&mut self) -> &mut Self::Inner {

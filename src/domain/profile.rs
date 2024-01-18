@@ -1,5 +1,5 @@
 pub use profile::Profile;
-pub use profile::ProfileError;
+pub use profile::ProfileDomainError;
 
 pub mod profile {
     use lazy_static::lazy_static;
@@ -18,7 +18,7 @@ pub mod profile {
     }
 
     #[derive(Debug)]
-    pub enum ProfileError {
+    pub enum ProfileDomainError {
         InvalidUsername,
     }
 
@@ -28,7 +28,7 @@ pub mod profile {
     }
 
     impl Profile {
-        pub fn new(id: i64, username: String, display_name: Option<String>, bio: Option<String>, banner: Option<String>, profile_picture: Option<String>, user_id: i64) -> Result<Self, ProfileError> {
+        pub fn new(id: i64, username: String, display_name: Option<String>, bio: Option<String>, banner: Option<String>, profile_picture: Option<String>, user_id: i64) -> Result<Self, ProfileDomainError> {
             Self::validate_username(&username)?;
 
             Ok(Self::new_raw(id, username, display_name, bio, banner, profile_picture, user_id))
@@ -48,11 +48,11 @@ pub mod profile {
 
         // Valid username test
         // (alphanumerical, optionally a dash surrounded by alphanumerical characters, 15 character limit)
-        pub fn validate_username(username: &str) -> Result<(), ProfileError> {
+        pub fn validate_username(username: &str) -> Result<(), ProfileDomainError> {
             let username_count = username.graphemes(true).count();
 
             if !USERNAME_REGEX.is_match(username) || !(3..=15).contains(&username_count) {
-                return Err(ProfileError::InvalidUsername);
+                return Err(ProfileDomainError::InvalidUsername);
             }
 
             Ok(())

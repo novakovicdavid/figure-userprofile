@@ -7,3 +7,4 @@ pub mod to_json_string;
 pub mod session;
 pub mod middleware;
 pub mod misc_routes;
+pub mod secure_hasher;

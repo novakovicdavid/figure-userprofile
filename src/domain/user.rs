@@ -1,5 +1,5 @@
 pub use user::User;
-pub use user::UserError;
+pub use user::UserDomainError;
 
 pub mod user {
     use lazy_static::lazy_static;
@@ -15,7 +15,7 @@ pub mod user {
     }
 
     #[derive(Debug)]
-    pub enum UserError {
+    pub enum UserDomainError {
         InvalidEmail,
         PasswordTooShort,
         PasswordTooLong,
@@ -27,7 +27,7 @@ pub mod user {
     }
 
     impl User {
-        pub fn new(id: i64, email: String, password: String, role: String) -> Result<Self, UserError> {
+        pub fn new(id: i64, email: String, password: String, role: String) -> Result<Self, UserDomainError> {
             Self::validate_email(&email)?;
 
             Ok(Self::new_raw(id, email, password, role))
@@ -43,35 +43,35 @@ pub mod user {
         }
 
         // Valid email test (OWASP Regex + maximum length of 60 graphemes
-        pub fn validate_email(email: &str) -> Result<(), UserError> {
+        pub fn validate_email(email: &str) -> Result<(), UserDomainError> {
             let graphemes = email.graphemes(true);
             let mut count = 0;
             for _ in graphemes {
                 count += 1;
                 if count > 60 {
-                    return Err(UserError::InvalidEmail);
+                    return Err(UserDomainError::InvalidEmail);
                 }
             }
             if count < 3 {
-                return Err(UserError::InvalidEmail);
+                return Err(UserDomainError::InvalidEmail);
             }
 
             if !EMAIL_REGEX.is_match(email) {
-                return Err(UserError::InvalidEmail);
+                return Err(UserDomainError::InvalidEmail);
             }
 
             Ok(())
         }
 
-        pub fn validate_password(password: &str) -> Result<(), UserError> {
+        pub fn validate_password(password: &str) -> Result<(), UserDomainError> {
             let password_length = password.graphemes(true).count();
 
             if password_length < 8 {
-                return Err(UserError::PasswordTooShort);
+                return Err(UserDomainError::PasswordTooShort);
             }
 
             if password_length > 128 {
-                return Err(UserError::PasswordTooLong);
+                return Err(UserDomainError::PasswordTooLong);
             }
 
             Ok(())

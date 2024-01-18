@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
+
 use axum::{middleware, Router};
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, post};
@@ -13,17 +14,19 @@ use tower_http::cors::{AllowOrigin, CorsLayer};
 use tower_http::limit::RequestBodyLimitLayer;
 use tracing::info;
 use url::Url;
+
 use crate::application::profile::routes::{get_profile, get_total_profiles_count, update_profile};
 use crate::application::profile::service::ProfileService;
-use crate::application::user::routes::{sign_in, sign_out, sign_up};
+use crate::application::transaction::TransactionTrait;
+use crate::application::user::routes::{sign_in, sign_up};
 use crate::application::user::service::UserService;
-use crate::context::{Context, ContextTrait, RepositoryContext, ServiceContext};
 use crate::environment::Environment;
 use crate::infrastructure::middleware::correlation_id_layer::correlation_id_extension;
 use crate::infrastructure::middleware::session_layer::session_extension;
 use crate::infrastructure::middleware::tracing_layer::create_tracing_layer;
 use crate::infrastructure::misc_routes::healthcheck;
 use crate::infrastructure::profile::repository::ProfileRepository;
+use crate::infrastructure::secure_hasher::Argon2Hasher;
 use crate::infrastructure::secure_rand_generator::ChaCha20;
 use crate::infrastructure::transaction::PostgresTransactionManager;
 use crate::infrastructure::user::repository::UserRepository;
@@ -31,18 +34,21 @@ use crate::infrastructure::user::repository::UserRepository;
 mod domain;
 mod infrastructure;
 mod application;
-mod context;
 mod environment;
 
-pub struct ServerState<C: ContextTrait> {
-    context: C,
+
+pub struct ServerState<T> {
+    user_service: UserService<T>,
+    profile_service: ProfileService<T>,
+
     domain: String,
 }
 
-impl<C: ContextTrait> ServerState<C> {
-    pub fn new(context: C, domain: String) -> Self {
+impl<T: TransactionTrait> ServerState<T> {
+    pub fn new(user_service: UserService<T>, profile_service: ProfileService<T>, domain: String) -> Self {
         Self {
-            context,
+            user_service,
+            profile_service,
             domain,
         }
     }
@@ -96,7 +102,7 @@ async fn main() -> anyhow::Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn create_app<C: ContextTrait + 'static>(server_state: Arc<ServerState<C>>, cors: CorsLayer) -> Router {
+fn create_app<T: TransactionTrait + 'static>(server_state: Arc<ServerState<T>>, cors: CorsLayer) -> Router {
     Router::new()
         .route("/profile/update", post(update_profile))
         // Disable the default limit
@@ -118,7 +124,7 @@ fn create_app<C: ContextTrait + 'static>(server_state: Arc<ServerState<C>>, cors
         .layer(middleware::from_fn(correlation_id_extension))
 }
 
-fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl ContextTrait>> {
+fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl TransactionTrait>> {
     // Initialize repositories
     let transaction_starter = PostgresTransactionManager::new(db_pool.clone());
     let user_repository = UserRepository::new(db_pool.clone());
@@ -126,24 +132,19 @@ fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl
 
     // Initialize utilities
     let secure_random_generator = ChaCha20::new();
+    let secure_hasher = Argon2Hasher;
 
     // Initialize services
     let user_service = UserService::new(
         Box::new(transaction_starter.clone()), Box::new(user_repository.clone()),
         Box::new(profile_repository.clone()),
-        Box::new(secure_random_generator));
+        Box::new(secure_random_generator),
+        Box::new(secure_hasher));
 
     let profile_service = ProfileService::new(Box::new(profile_repository.clone()));
 
-    // Create service and repository contexts
-    let repository_context = RepositoryContext::new(user_repository, profile_repository);
-    let service_context = ServiceContext::new(user_service, profile_service);
-
-    // Combine contexts
-    let context = Context::new(service_context, repository_context);
-
     // Resulting state
-    Arc::new(ServerState::new(context, domain))
+    Arc::new(ServerState::new(user_service, profile_service, domain))
 }
 
 fn create_app_cors<T: Into<AllowOrigin>>(origins: T) -> CorsLayer {
