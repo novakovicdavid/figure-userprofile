@@ -1,6 +1,6 @@
 use crate::application::profile::service::ProfileServiceError;
 use crate::application::transaction::TransactionError;
-use crate::application::user::service::UserServiceError;
+use crate::application::user::service::UserProfileServiceError;
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
 use crate::infrastructure::secure_hasher::SecureHasherError;
@@ -42,28 +42,30 @@ impl ErrorInfo for ProfileDomainError {
     }
 }
 
-impl ErrorInfo for UserServiceError {
+impl ErrorInfo for UserProfileServiceError {
     fn error_message(&self) -> &str {
         match self {
-            UserServiceError::UnexpectedError(_) => unreachable!(),
-            UserServiceError::UserDomainError(e) => e.error_message(),
-            UserServiceError::SecureHasherError(e) => e.error_message(),
-            UserServiceError::RepositoryError(e) => e.error_message(),
-            UserServiceError::TransactionError(e) => e.error_message(),
-            UserServiceError::EmailAlreadyInUse => "email-already-in-use",
-            UserServiceError::WrongPassword => "wrong-password",
+            UserProfileServiceError::UnexpectedError(_) => unreachable!(),
+            UserProfileServiceError::UserDomainError(e) => e.error_message(),
+            UserProfileServiceError::ProfileDomainError(e) => e.error_message(),
+            UserProfileServiceError::SecureHasherError(e) => e.error_message(),
+            UserProfileServiceError::RepositoryError(e) => e.error_message(),
+            UserProfileServiceError::TransactionError(e) => e.error_message(),
+            UserProfileServiceError::EmailAlreadyInUse => "email-already-in-use",
+            UserProfileServiceError::WrongPassword => "wrong-password",
         }
     }
 
     fn status_code(&self) -> u16 {
         match self {
-            UserServiceError::UnexpectedError(_) => unreachable!(),
-            UserServiceError::EmailAlreadyInUse => 409,
-            UserServiceError::WrongPassword => 401,
-            UserServiceError::UserDomainError(e) => e.status_code(),
-            UserServiceError::RepositoryError(e) => e.status_code(),
-            UserServiceError::TransactionError(e) => e.status_code(),
-            UserServiceError::SecureHasherError(e) => e.status_code(),
+            UserProfileServiceError::UnexpectedError(_) => unreachable!(),
+            UserProfileServiceError::EmailAlreadyInUse => 409,
+            UserProfileServiceError::WrongPassword => 401,
+            UserProfileServiceError::UserDomainError(e) => e.status_code(),
+            UserProfileServiceError::ProfileDomainError(e) => e.status_code(),
+            UserProfileServiceError::RepositoryError(e) => e.status_code(),
+            UserProfileServiceError::TransactionError(e) => e.status_code(),
+            UserProfileServiceError::SecureHasherError(e) => e.status_code(),
         }
     }
 }

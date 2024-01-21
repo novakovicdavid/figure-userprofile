@@ -4,12 +4,13 @@ use crate::application::error_handling::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
 use crate::application::user::repository::UserRepositoryTrait;
-use crate::domain::User;
+use crate::domain::{Profile, User};
+use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
 use crate::infrastructure::secure_hasher::{SecureHasher, SecureHasherError};
 use crate::infrastructure::secure_rand_generator::RandomNumberGenerator;
 
-pub struct UserService<T> {
+pub struct UserProfileService<T> {
     transaction_creator: Box<dyn TransactionManagerTrait<T>>,
     marker: PhantomData<T>,
     user_repository: Box<dyn UserRepositoryTrait<T>>,
@@ -19,11 +20,12 @@ pub struct UserService<T> {
 }
 
 #[derive(Debug)]
-pub enum UserServiceError {
+pub enum UserProfileServiceError {
     EmailAlreadyInUse,
     WrongPassword,
 
     UserDomainError(UserDomainError),
+    ProfileDomainError(ProfileDomainError),
 
     RepositoryError(RepositoryError),
     TransactionError(TransactionError),
@@ -32,14 +34,14 @@ pub enum UserServiceError {
     UnexpectedError(anyhow::Error),
 }
 
-impl<T> UserService<T> where T: TransactionTrait
+impl<T> UserProfileService<T> where T: TransactionTrait
 {
     pub fn new(transaction_creator: Box<dyn TransactionManagerTrait<T>>,
                user_repository: Box<dyn UserRepositoryTrait<T>>,
                profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
                secure_random_generator: Box<dyn RandomNumberGenerator>,
                secure_hasher: Box<dyn SecureHasher>) -> Self {
-        UserService {
+        UserProfileService {
             user_repository,
             profile_repository,
             transaction_creator,
@@ -49,13 +51,13 @@ impl<T> UserService<T> where T: TransactionTrait
         }
     }
 
-    pub async fn sign_up(&self, email: &str, password: &str, username: &str) -> Result<(i64, String), UserServiceError> {
+    pub async fn sign_up(&self, email: &str, password: &str, username: &str) -> Result<(i64, String), UserProfileServiceError> {
         User::validate_email(email)?;
         User::validate_password(password)?;
 
 
         if self.user_repository.find_one_by_email(None, email).await.is_ok() {
-            return Err(UserServiceError::EmailAlreadyInUse);
+            return Err(UserProfileServiceError::EmailAlreadyInUse);
         }
 
         let password_hash = self.secure_hasher.hash_password(password)?;
@@ -65,12 +67,17 @@ impl<T> UserService<T> where T: TransactionTrait
         let user = User::new(0, email.to_string(), password_hash, "user".to_string())?;
         let user = self.user_repository.create(Some(&mut transaction), user).await?;
 
+        let profile = Profile::new(0, username.to_string(), None, None, None, None, user.get_id())?;
+        let profile = self.profile_repository.create(Some(&mut transaction), profile).await?;
+
         transaction.commit().await?;
 
-        Ok((1, "d".to_string()))
+
+
+        Ok((profile.get_id(), "".to_string()))
     }
 
-    pub async fn sign_in(&self, email: &str, password: &str) -> Result<(i64, String), UserServiceError> {
+    pub async fn sign_in(&self, email: &str, password: &str) -> Result<(i64, String), UserProfileServiceError> {
         User::validate_email(email)?;
         User::validate_password(password)?;
 
@@ -84,26 +91,32 @@ impl<T> UserService<T> where T: TransactionTrait
     }
 }
 
-impl From<UserDomainError> for UserServiceError {
+impl From<UserDomainError> for UserProfileServiceError {
     fn from(value: UserDomainError) -> Self {
-        UserServiceError::UserDomainError(value)
+        UserProfileServiceError::UserDomainError(value)
     }
 }
 
-impl From<SecureHasherError> for UserServiceError {
+impl From<SecureHasherError> for UserProfileServiceError {
     fn from(value: SecureHasherError) -> Self {
-        UserServiceError::SecureHasherError(value)
+        UserProfileServiceError::SecureHasherError(value)
     }
 }
 
-impl From<TransactionError> for UserServiceError {
+impl From<TransactionError> for UserProfileServiceError {
     fn from(value: TransactionError) -> Self {
-        UserServiceError::TransactionError(value)
+        UserProfileServiceError::TransactionError(value)
     }
 }
 
-impl From<RepositoryError> for UserServiceError {
+impl From<RepositoryError> for UserProfileServiceError {
     fn from(value: RepositoryError) -> Self {
-        UserServiceError::RepositoryError(value)
+        UserProfileServiceError::RepositoryError(value)
+    }
+}
+
+impl From<ProfileDomainError> for UserProfileServiceError {
+    fn from(value: ProfileDomainError) -> Self {
+        Self::ProfileDomainError(value)
     }
 }

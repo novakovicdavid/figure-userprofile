@@ -19,7 +19,7 @@ use crate::application::profile::routes::{get_profile, get_total_profiles_count,
 use crate::application::profile::service::ProfileService;
 use crate::application::transaction::TransactionTrait;
 use crate::application::user::routes::{sign_in, sign_up};
-use crate::application::user::service::UserService;
+use crate::application::user::service::UserProfileService;
 use crate::environment::Environment;
 use crate::infrastructure::middleware::correlation_id_layer::correlation_id_extension;
 use crate::infrastructure::middleware::session_layer::session_extension;
@@ -38,14 +38,14 @@ mod environment;
 
 
 pub struct ServerState<T> {
-    user_service: UserService<T>,
+    user_service: UserProfileService<T>,
     profile_service: ProfileService<T>,
 
     domain: String,
 }
 
 impl<T: TransactionTrait> ServerState<T> {
-    pub fn new(user_service: UserService<T>, profile_service: ProfileService<T>, domain: String) -> Self {
+    pub fn new(user_service: UserProfileService<T>, profile_service: ProfileService<T>, domain: String) -> Self {
         Self {
             user_service,
             profile_service,
@@ -135,7 +135,7 @@ fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl
     let secure_hasher = Argon2Hasher;
 
     // Initialize services
-    let user_service = UserService::new(
+    let user_profile_service = UserProfileService::new(
         Box::new(transaction_starter.clone()), Box::new(user_repository.clone()),
         Box::new(profile_repository.clone()),
         Box::new(secure_random_generator),
@@ -144,7 +144,7 @@ fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl
     let profile_service = ProfileService::new(Box::new(profile_repository.clone()));
 
     // Resulting state
-    Arc::new(ServerState::new(user_service, profile_service, domain))
+    Arc::new(ServerState::new(user_profile_service, profile_service, domain))
 }
 
 fn create_app_cors<T: Into<AllowOrigin>>(origins: T) -> CorsLayer {

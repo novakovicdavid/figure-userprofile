@@ -14,13 +14,13 @@ mod application_error {
 
     use crate::application::error_handling::RouteError;
     use crate::application::profile::service::ProfileServiceError;
-    use crate::application::user::service::UserServiceError;
+    use crate::application::user::service::UserProfileServiceError;
 
     #[derive(Debug)]
     pub enum ApplicationError {
         UnexpectedError(anyhow::Error),
 
-        UserServiceError(UserServiceError),
+        UserServiceError(UserProfileServiceError),
         ProfileServiceError(ProfileServiceError),
 
         RouteError(RouteError),
@@ -90,10 +90,10 @@ mod application_error {
         }
     }
 
-    impl From<UserServiceError> for ApplicationError {
-        fn from(value: UserServiceError) -> Self {
+    impl From<UserProfileServiceError> for ApplicationError {
+        fn from(value: UserProfileServiceError) -> Self {
             match value {
-                UserServiceError::UnexpectedError(e) => ApplicationError::UnexpectedError(e),
+                UserProfileServiceError::UnexpectedError(e) => ApplicationError::UnexpectedError(e),
                 _ => ApplicationError::UserServiceError(value),
             }
         }
