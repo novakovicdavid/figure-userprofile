@@ -35,7 +35,7 @@ url = "2.4.1"
 
 # Data
 sqlx = { version = "0.7.2", features = ["runtime-tokio-rustls", "postgres"] }
-redis = { version = "0.23.3", features = ["tokio-comp", "tokio-rustls-comp", "connection-manager"] }
+redis = { version = "0.24.0", features = ["tokio-comp", "tokio-rustls-comp", "connection-manager"] }
 
 # Security
 argon2 = { version = "0.5.2", features = ["std"] }
