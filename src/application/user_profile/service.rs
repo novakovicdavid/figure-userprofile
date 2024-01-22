@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::application::error_handling::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
-use crate::application::user::repository::UserRepositoryTrait;
+use crate::application::user_profile::repository::UserRepositoryTrait;
 use crate::domain::{Profile, User};
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;

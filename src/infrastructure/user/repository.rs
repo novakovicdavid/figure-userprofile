@@ -4,7 +4,7 @@ use sqlx::postgres::PgRow;
 
 use crate::application::RepositoryError;
 use crate::application::transaction::TransactionTrait;
-use crate::application::user::repository::UserRepositoryTrait;
+use crate::application::user_profile::repository::UserRepositoryTrait;
 use crate::domain::User;
 use crate::infrastructure::transaction::PostgresTransaction;
 

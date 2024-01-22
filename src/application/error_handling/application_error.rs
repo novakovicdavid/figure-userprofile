@@ -14,7 +14,7 @@ mod application_error {
 
     use crate::application::error_handling::RouteError;
     use crate::application::profile::service::ProfileServiceError;
-    use crate::application::user::service::UserProfileServiceError;
+    use crate::application::user_profile::service::UserProfileServiceError;
 
     #[derive(Debug)]
     pub enum ApplicationError {

@@ -1,6 +1,6 @@
 use crate::application::profile::service::ProfileServiceError;
 use crate::application::transaction::TransactionError;
-use crate::application::user::service::UserProfileServiceError;
+use crate::application::user_profile::service::UserProfileServiceError;
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
 use crate::infrastructure::secure_hasher::SecureHasherError;
