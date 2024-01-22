@@ -33,6 +33,10 @@ http-body = "1.0.0"
 cookie = { version = "0.18.0", features = ["secure"] }
 url = "2.4.1"
 
+# gRPC
+tonic = "0.10.2"
+prost = "0.12.3"
+
 # Data
 sqlx = { version = "0.7.2", features = ["runtime-tokio-rustls", "postgres"] }
 redis = { version = "0.24.0", features = ["tokio-comp", "tokio-rustls-comp", "connection-manager"] }
@@ -50,3 +54,6 @@ lazy_static = "1.4.0"
 derive-name = { git = "https://github.com/novakovicdavid/derive-name.git" }
 bytes = "1.5.0"
 uuid = { version = "1.4.0", features = ["v4"] }
+
+[build-dependencies]
+tonic-build = "0.10.2"

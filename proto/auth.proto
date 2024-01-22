@@ -1,0 +1,15 @@
+syntax = "proto3";
+package auth;
+
+service Auth {
+    rpc create_session (create_session_request) returns (create_session_response);
+}
+
+message create_session_request {
+   int64 user_id = 1;
+   int64 profile_id = 2;
+}
+
+message create_session_response {
+    string session_token = 1;
+}
