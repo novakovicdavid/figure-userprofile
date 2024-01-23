@@ -21,6 +21,7 @@ use crate::application::transaction::TransactionTrait;
 use crate::application::user_profile::routes::{sign_in, sign_up};
 use crate::application::user_profile::service::UserProfileService;
 use crate::environment::Environment;
+use crate::infrastructure::GrpcAuthConnector;
 use crate::infrastructure::middleware::correlation_id_layer::correlation_id_extension;
 use crate::infrastructure::middleware::session_layer::session_extension;
 use crate::infrastructure::middleware::tracing_layer::create_tracing_layer;
@@ -61,9 +62,11 @@ async fn main() -> anyhow::Result<(), anyhow::Error> {
     let env = Environment::new()?;
 
     info!("Connecting to database...");
+    let database_url = env.database_url.clone();
+
     let db_pool_future = task::spawn(async move {
         let time = Instant::now();
-        Pool::<Postgres>::connect(&env.database_url).await
+        Pool::<Postgres>::connect(&database_url).await
             .map(|pool| {
                 info!("Connected to database in {}ms...", time.elapsed().as_millis());
                 pool
@@ -82,7 +85,7 @@ async fn main() -> anyhow::Result<(), anyhow::Error> {
     let db_pool = db_pool_future.await??;
 
     info!("Creating state...");
-    let server_state = create_state(db_pool, domain);
+    let server_state = create_state(db_pool, domain, &env);
 
     info!("Setting up routes and layers...");
     let app = create_app(server_state, cors);
@@ -124,11 +127,13 @@ fn create_app<T: TransactionTrait + 'static>(server_state: Arc<ServerState<T>>, 
         .layer(middleware::from_fn(correlation_id_extension))
 }
 
-fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl TransactionTrait>> {
+fn create_state(db_pool: Pool<Postgres>, domain: String, env: &Environment) -> Arc<ServerState<impl TransactionTrait>> {
     // Initialize repositories
     let transaction_starter = PostgresTransactionManager::new(db_pool.clone());
     let user_repository = UserRepository::new(db_pool.clone());
     let profile_repository = ProfileRepository::new(db_pool.clone());
+
+    let auth_connector = GrpcAuthConnector::new(env.auth_host.clone(), env.auth_port);
 
     // Initialize utilities
     let secure_random_generator = ChaCha20::new();
@@ -139,7 +144,8 @@ fn create_state(db_pool: Pool<Postgres>, domain: String) -> Arc<ServerState<impl
         Box::new(transaction_starter.clone()), Box::new(user_repository.clone()),
         Box::new(profile_repository.clone()),
         Box::new(secure_random_generator),
-        Box::new(secure_hasher));
+        Box::new(secure_hasher),
+        Box::new(auth_connector));
 
     let profile_service = ProfileService::new(Box::new(profile_repository.clone()));
 

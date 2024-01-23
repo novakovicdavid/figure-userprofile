@@ -1,16 +1,13 @@
 use async_trait::async_trait;
 
 #[async_trait]
-pub trait AuthConnector {
+pub trait AuthConnector: Send + Sync {
     async fn create_session(&self, user_id: i64, profile_id: i64) -> Result<String, AuthConnectorError>;
 }
 
 #[derive(Debug)]
 pub enum AuthConnectorError {
     UnexpectedError(anyhow::Error),
-
-    InvalidUserId,
-    InvalidProfileId,
 }
 
 #[cfg(test)]
@@ -41,9 +38,9 @@ mod mock {
                 .push((session_id.clone(), user_id, profile_id));
 
             match (user_id, profile_id) {
-                (user_id, _) if user_id < 1 => Err(AuthConnectorError::InvalidUserId),
+                (user_id, _) if user_id < 1 => Err(AuthConnectorError::UnexpectedError(anyhow::Error::msg("invalid-user-id"))),
 
-                (_, profile_id) if profile_id < 1 => Err(AuthConnectorError::InvalidProfileId),
+                (_, profile_id) if profile_id < 1 => Err(AuthConnectorError::UnexpectedError(anyhow::Error::msg("invalid-profile-id"))),
 
                 (user_id, profile_id) => Ok(session_id),
             }

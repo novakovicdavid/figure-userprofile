@@ -11,6 +11,9 @@ pub struct Environment {
 
     pub server_port: u16,
 
+    pub auth_host: String,
+    pub auth_port: u16,
+
     // Loki logging server url & name of running figure-backend instance
     pub loki_host: Option<String>,
     pub loki_url: Option<String>,
@@ -36,6 +39,8 @@ impl Environment {
                     warn!("{error_reason}, defaulting to port 8000");
                     "8000".to_string()
                 }).parse::<u16>().expect("Invalid SERVER_PORT env"),
+                auth_host: Self::get_var("AUTH_HOST").expect("No AUTH_HOST env found"),
+                auth_port: Self::get_var("AUTH_PORT").expect("No AUTH_PORT env found").parse().unwrap(),
             }
         )
     }

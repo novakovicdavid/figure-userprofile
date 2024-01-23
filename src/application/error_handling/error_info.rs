@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+use crate::application::connectors::auth_connector::AuthConnectorError;
 use crate::application::profile::service::ProfileServiceError;
 use crate::application::transaction::TransactionError;
 use crate::application::user_profile::service::UserProfileServiceError;
@@ -51,6 +53,7 @@ impl ErrorInfo for UserProfileServiceError {
             UserProfileServiceError::SecureHasherError(e) => e.error_message(),
             UserProfileServiceError::RepositoryError(e) => e.error_message(),
             UserProfileServiceError::TransactionError(e) => e.error_message(),
+            UserProfileServiceError::AuthConnectorError(e) => e.error_message(),
             UserProfileServiceError::EmailAlreadyInUse => "email-already-in-use",
             UserProfileServiceError::WrongPassword => "wrong-password",
         }
@@ -66,6 +69,7 @@ impl ErrorInfo for UserProfileServiceError {
             UserProfileServiceError::RepositoryError(e) => e.status_code(),
             UserProfileServiceError::TransactionError(e) => e.status_code(),
             UserProfileServiceError::SecureHasherError(e) => e.status_code(),
+            UserProfileServiceError::AuthConnectorError(e) => e.status_code(),
         }
     }
 }
@@ -112,6 +116,20 @@ impl ErrorInfo for TransactionError {
     fn status_code(&self) -> u16 {
         match self {
             TransactionError::UnexpectedError(_) => unreachable!()
+        }
+    }
+}
+
+impl ErrorInfo for AuthConnectorError {
+    fn error_message(&self) -> &str {
+        match self {
+            AuthConnectorError::UnexpectedError(_) => unreachable!(),
+        }
+    }
+
+    fn status_code(&self) -> u16 {
+        match self {
+            AuthConnectorError::UnexpectedError(_) => unreachable!(),
         }
     }
 }

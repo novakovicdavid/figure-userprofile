@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 use crate::application::error_handling::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
@@ -17,6 +18,7 @@ pub struct UserProfileService<T> {
     profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
     secure_random_generator: Box<dyn RandomNumberGenerator>,
     secure_hasher: Box<dyn SecureHasher>,
+    auth_connector: Box<dyn AuthConnector>
 }
 
 #[derive(Debug)]
@@ -30,6 +32,7 @@ pub enum UserProfileServiceError {
     RepositoryError(RepositoryError),
     TransactionError(TransactionError),
     SecureHasherError(SecureHasherError),
+    AuthConnectorError(AuthConnectorError),
 
     UnexpectedError(anyhow::Error),
 }
@@ -40,13 +43,15 @@ impl<T> UserProfileService<T> where T: TransactionTrait
                user_repository: Box<dyn UserRepositoryTrait<T>>,
                profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
                secure_random_generator: Box<dyn RandomNumberGenerator>,
-               secure_hasher: Box<dyn SecureHasher>) -> Self {
+               secure_hasher: Box<dyn SecureHasher>,
+               auth_connector: Box<dyn AuthConnector>) -> Self {
         UserProfileService {
             user_repository,
             profile_repository,
             transaction_creator,
             secure_random_generator,
             secure_hasher,
+            auth_connector,
             marker: PhantomData::default(),
         }
     }
@@ -72,9 +77,11 @@ impl<T> UserProfileService<T> where T: TransactionTrait
 
         transaction.commit().await?;
 
+        let session_id = self.auth_connector
+            .create_session(user.get_id(), profile.get_id())
+            .await?;
 
-
-        Ok((profile.get_id(), "".to_string()))
+        Ok((profile.get_id(), session_id))
     }
 
     pub async fn sign_in(&self, email: &str, password: &str) -> Result<(i64, String), UserProfileServiceError> {
@@ -118,5 +125,11 @@ impl From<RepositoryError> for UserProfileServiceError {
 impl From<ProfileDomainError> for UserProfileServiceError {
     fn from(value: ProfileDomainError) -> Self {
         Self::ProfileDomainError(value)
+    }
+}
+
+impl From<AuthConnectorError> for UserProfileServiceError {
+    fn from(value: AuthConnectorError) -> Self {
+        Self::AuthConnectorError(value)
     }
 }

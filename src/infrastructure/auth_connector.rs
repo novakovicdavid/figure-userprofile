@@ -1,3 +1,5 @@
+pub use auth_connector::GrpcAuthConnector;
+
 mod auth_connector {
     use async_trait::async_trait;
 
@@ -10,6 +12,15 @@ mod auth_connector {
     pub struct GrpcAuthConnector {
         host: String,
         port: u16,
+    }
+
+    impl GrpcAuthConnector {
+        pub fn new(host: String, port: u16) -> Self {
+            Self {
+                host,
+                port,
+            }
+        }
     }
 
     #[async_trait]
@@ -29,11 +40,7 @@ mod auth_connector {
                 .create_session(request)
                 .await
                 .map(|response| response.into_inner().session_token)
-                .map_err(|status| match status.message() {
-                    "invalid-user-id" => AuthConnectorError::InvalidUserId,
-                    "invalid-profile-id" => AuthConnectorError::InvalidProfileId,
-                    _ => AuthConnectorError::UnexpectedError(anyhow::Error::msg(status))
-                })
+                .map_err(|status| AuthConnectorError::UnexpectedError(anyhow::Error::msg(status)))
         }
     }
 }
