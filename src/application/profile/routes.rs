@@ -19,7 +19,7 @@ pub async fn get_profile<T: TransactionTrait>(State(server_state): State<Arc<Ser
         .await
         .and_then(|profile| Ok(ProfileWithoutUserIdDTO::from(profile)))
         .map(to_json_string_with_name)
-        .map_err(|e| ApplicationError::from(e))
+        .map_err(ApplicationError::from)
 }
 
 pub async fn get_total_profiles_count<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>) -> impl IntoResponse {
@@ -27,7 +27,7 @@ pub async fn get_total_profiles_count<T: TransactionTrait>(State(server_state): 
         .get_total_profiles_count()
         .await
         .map(|count| count.to_string())
-        .map_err(|e| ApplicationError::from(e))
+        .map_err(ApplicationError::from)
 }
 
 pub async fn update_profile<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, session: Extension<SessionOption>, multipart: Multipart) -> impl IntoResponse {
@@ -49,7 +49,7 @@ pub async fn update_profile<T: TransactionTrait>(State(server_state): State<Arc<
     server_state.profile_service
         .update_profile_by_id(session.profile_id, display_name, bio)
         .await
-        .map_err(|e| ApplicationError::from(e))
+        .map_err(ApplicationError::from)
         .into_response()
 }
 
