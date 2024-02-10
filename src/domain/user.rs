@@ -4,6 +4,7 @@ pub use user::UserDomainError;
 pub mod user {
     use lazy_static::lazy_static;
     use regex::Regex;
+    use thiserror::Error;
     use unicode_segmentation::UnicodeSegmentation;
 
     #[derive(Debug, Clone, PartialEq)]
@@ -14,10 +15,13 @@ pub mod user {
         role: String,
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Error)]
     pub enum UserDomainError {
+        #[error("invalid-email")]
         InvalidEmail,
+        #[error("password-too-short")]
         PasswordTooShort,
+        #[error("password-too-long")]
         PasswordTooLong,
     }
 

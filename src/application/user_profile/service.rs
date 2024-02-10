@@ -1,4 +1,6 @@
 use std::marker::PhantomData;
+use error_conversion_macro::ErrorEnum;
+use thiserror::Error;
 
 use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 use crate::application::error_handling::RepositoryError;
@@ -21,19 +23,31 @@ pub struct UserProfileService<T> {
     auth_connector: Box<dyn AuthConnector>
 }
 
-#[derive(Debug)]
+#[derive(Debug, ErrorEnum, Error)]
 pub enum UserProfileServiceError {
+    #[error("email-already-in-use")]
     EmailAlreadyInUse,
+    #[error("wrong-password")]
     WrongPassword,
 
+    #[without_anyhow]
+    #[error(transparent)]
     UserDomainError(UserDomainError),
+
+    #[without_anyhow]
+    #[error(transparent)]
     ProfileDomainError(ProfileDomainError),
 
+    #[error(transparent)]
     RepositoryError(RepositoryError),
+    #[error(transparent)]
     TransactionError(TransactionError),
+    #[error(transparent)]
     SecureHasherError(SecureHasherError),
+    #[error(transparent)]
     AuthConnectorError(AuthConnectorError),
 
+    #[error(transparent)]
     UnexpectedError(anyhow::Error),
 }
 
@@ -95,41 +109,5 @@ impl<T> UserProfileService<T> where T: TransactionTrait
         let profile = self.profile_repository.find_by_user_id(None, user.get_id()).await?;
 
         Ok((1, "d".to_string()))
-    }
-}
-
-impl From<UserDomainError> for UserProfileServiceError {
-    fn from(value: UserDomainError) -> Self {
-        UserProfileServiceError::UserDomainError(value)
-    }
-}
-
-impl From<SecureHasherError> for UserProfileServiceError {
-    fn from(value: SecureHasherError) -> Self {
-        UserProfileServiceError::SecureHasherError(value)
-    }
-}
-
-impl From<TransactionError> for UserProfileServiceError {
-    fn from(value: TransactionError) -> Self {
-        UserProfileServiceError::TransactionError(value)
-    }
-}
-
-impl From<RepositoryError> for UserProfileServiceError {
-    fn from(value: RepositoryError) -> Self {
-        UserProfileServiceError::RepositoryError(value)
-    }
-}
-
-impl From<ProfileDomainError> for UserProfileServiceError {
-    fn from(value: ProfileDomainError) -> Self {
-        Self::ProfileDomainError(value)
-    }
-}
-
-impl From<AuthConnectorError> for UserProfileServiceError {
-    fn from(value: AuthConnectorError) -> Self {
-        Self::AuthConnectorError(value)
     }
 }

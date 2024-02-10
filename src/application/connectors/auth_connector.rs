@@ -1,12 +1,14 @@
 use async_trait::async_trait;
+use thiserror::Error;
 
 #[async_trait]
 pub trait AuthConnector: Send + Sync {
     async fn create_session(&self, user_id: i64, profile_id: i64) -> Result<String, AuthConnectorError>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum AuthConnectorError {
+    #[error(transparent)]
     UnexpectedError(anyhow::Error),
 }
 

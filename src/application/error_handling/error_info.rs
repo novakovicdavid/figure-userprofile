@@ -8,19 +8,10 @@ use crate::domain::user::UserDomainError;
 use crate::infrastructure::secure_hasher::SecureHasherError;
 
 pub trait ErrorInfo {
-    fn error_message(&self) -> &str;
     fn status_code(&self) -> u16;
 }
 
 impl ErrorInfo for UserDomainError {
-    fn error_message(&self) -> &str {
-        match self {
-            UserDomainError::InvalidEmail => "invalid-email",
-            UserDomainError::PasswordTooShort => "password-too-short",
-            UserDomainError::PasswordTooLong => "password-too-long",
-        }
-    }
-
     fn status_code(&self) -> u16 {
         match self {
             UserDomainError::InvalidEmail => 400,
@@ -31,12 +22,6 @@ impl ErrorInfo for UserDomainError {
 }
 
 impl ErrorInfo for ProfileDomainError {
-    fn error_message(&self) -> &str {
-        match self {
-            ProfileDomainError::InvalidUsername => "invalid-username",
-        }
-    }
-
     fn status_code(&self) -> u16 {
         match self {
             ProfileDomainError::InvalidUsername => 400
@@ -45,20 +30,6 @@ impl ErrorInfo for ProfileDomainError {
 }
 
 impl ErrorInfo for UserProfileServiceError {
-    fn error_message(&self) -> &str {
-        match self {
-            UserProfileServiceError::UnexpectedError(_) => unreachable!(),
-            UserProfileServiceError::UserDomainError(e) => e.error_message(),
-            UserProfileServiceError::ProfileDomainError(e) => e.error_message(),
-            UserProfileServiceError::SecureHasherError(e) => e.error_message(),
-            UserProfileServiceError::RepositoryError(e) => e.error_message(),
-            UserProfileServiceError::TransactionError(e) => e.error_message(),
-            UserProfileServiceError::AuthConnectorError(e) => e.error_message(),
-            UserProfileServiceError::EmailAlreadyInUse => "email-already-in-use",
-            UserProfileServiceError::WrongPassword => "wrong-password",
-        }
-    }
-
     fn status_code(&self) -> u16 {
         match self {
             UserProfileServiceError::UnexpectedError(_) => unreachable!(),
@@ -75,13 +46,6 @@ impl ErrorInfo for UserProfileServiceError {
 }
 
 impl ErrorInfo for ProfileServiceError {
-    fn error_message(&self) -> &str {
-        match self {
-            ProfileServiceError::UnexpectedError(_) => unreachable!(),
-            ProfileServiceError::RepositoryError(e) => e.error_message(),
-        }
-    }
-
     fn status_code(&self) -> u16 {
         match self {
             ProfileServiceError::UnexpectedError(_) => unreachable!(),
@@ -91,13 +55,6 @@ impl ErrorInfo for ProfileServiceError {
 }
 
 impl ErrorInfo for SecureHasherError {
-    fn error_message(&self) -> &str {
-        match self {
-            SecureHasherError::UnexpectedError(_) => unreachable!(),
-            SecureHasherError::WrongPassword => "wrong-password"
-        }
-    }
-
     fn status_code(&self) -> u16 {
         match self {
             SecureHasherError::UnexpectedError(_) => unreachable!(),
@@ -107,12 +64,6 @@ impl ErrorInfo for SecureHasherError {
 }
 
 impl ErrorInfo for TransactionError {
-    fn error_message(&self) -> &str {
-        match self {
-            TransactionError::UnexpectedError(_) => unreachable!()
-        }
-    }
-
     fn status_code(&self) -> u16 {
         match self {
             TransactionError::UnexpectedError(_) => unreachable!()
@@ -121,12 +72,6 @@ impl ErrorInfo for TransactionError {
 }
 
 impl ErrorInfo for AuthConnectorError {
-    fn error_message(&self) -> &str {
-        match self {
-            AuthConnectorError::UnexpectedError(_) => unreachable!(),
-        }
-    }
-
     fn status_code(&self) -> u16 {
         match self {
             AuthConnectorError::UnexpectedError(_) => unreachable!(),

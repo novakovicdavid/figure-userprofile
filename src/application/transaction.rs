@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use thiserror::Error;
 
 #[async_trait]
 pub trait TransactionManagerTrait<T: TransactionTrait>: Send + Sync {
@@ -12,7 +13,8 @@ pub trait TransactionTrait: Send + Sync {
     fn inner(&mut self) -> &mut Self::Inner;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum TransactionError {
+    #[error(transparent)]
     UnexpectedError(anyhow::Error),
 }

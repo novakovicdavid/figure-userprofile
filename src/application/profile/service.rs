@@ -1,4 +1,6 @@
 use std::marker::PhantomData;
+use error_conversion_macro::ErrorEnum;
+use thiserror::Error;
 
 use crate::application::error_handling::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
@@ -10,9 +12,12 @@ pub struct ProfileService<T> {
     marker: PhantomData<T>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, ErrorEnum, Error)]
 pub enum ProfileServiceError {
+    #[error(transparent)]
     UnexpectedError(anyhow::Error),
+
+    #[error(transparent)]
     RepositoryError(RepositoryError),
 }
 
@@ -43,11 +48,5 @@ impl<T> ProfileService<T> where T: TransactionTrait {
         self.profile_repository.get_total_profiles_count(None)
             .await
             .map_err(|e| e.into())
-    }
-}
-
-impl From<RepositoryError> for ProfileServiceError {
-    fn from(value: RepositoryError) -> Self {
-        Self::RepositoryError(value)
     }
 }

@@ -8,52 +8,52 @@ mod application_error {
     use axum::Json;
     use axum::response::IntoResponse;
     use axum_core::response::Response;
+    use error_conversion_macro::ErrorEnum;
     use serde::Serialize;
+    use thiserror::Error;
     use tracing::{error, Instrument, Span};
-    use crate::application::error_handling::error_info::ErrorInfo;
 
+    use crate::application::error_handling::error_info::ErrorInfo;
     use crate::application::error_handling::RouteError;
     use crate::application::profile::service::ProfileServiceError;
     use crate::application::user_profile::service::UserProfileServiceError;
 
-    #[derive(Debug)]
+    #[derive(Debug, ErrorEnum, Error)]
     pub enum ApplicationError {
+        #[error(transparent)]
         UnexpectedError(anyhow::Error),
 
-        UserServiceError(UserProfileServiceError),
+        #[error(transparent)]
+        UserProfileServiceError(UserProfileServiceError),
+
+        #[error(transparent)]
         ProfileServiceError(ProfileServiceError),
 
+        #[without_anyhow]
+        #[error(transparent)]
         RouteError(RouteError),
     }
 
     impl ApplicationError {
-        pub fn to_str(&self) -> &str {
+        pub fn to_str(&self) -> String {
             match self {
-                ApplicationError::UnexpectedError(_) => "internal-server-error",
+                ApplicationError::UnexpectedError(_) => "internal-server-error".to_string(),
 
-                ApplicationError::UserServiceError(e) => e.error_message(),
-                ApplicationError::ProfileServiceError(e) => e.error_message(),
-                ApplicationError::RouteError(e) => e.error_message(),
+                ApplicationError::UserProfileServiceError(e) => e.to_string(),
+                ApplicationError::ProfileServiceError(e) => e.to_string(),
+                ApplicationError::RouteError(e) => e.to_string(),
             }
         }
     }
-
-    impl Error for ApplicationError {}
 
     #[derive(Serialize)]
     pub struct ErrorResponse<'a> {
         error: &'a str,
     }
 
-    impl Display for ApplicationError {
-        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-            write!(f, "{}", self.to_str())
-        }
-    }
-
     impl IntoResponse for ApplicationError {
         fn into_response(self) -> Response {
-            let error_str = self.to_string();
+            let error_str = self.to_str();
 
             let status_code = match self {
                 ApplicationError::UnexpectedError(error) => {
@@ -64,7 +64,7 @@ mod application_error {
                     500
                 }
 
-                ApplicationError::UserServiceError(e) => e.status_code(),
+                ApplicationError::UserProfileServiceError(e) => e.status_code(),
                 ApplicationError::ProfileServiceError(e) => e.status_code(),
                 ApplicationError::RouteError(e) => e.status_code(),
             };
@@ -81,30 +81,6 @@ mod application_error {
     impl PartialEq for ApplicationError {
         fn eq(&self, other: &Self) -> bool {
             self.to_string() == other.to_string()
-        }
-    }
-
-    impl From<RouteError> for ApplicationError {
-        fn from(value: RouteError) -> Self {
-            ApplicationError::RouteError(value)
-        }
-    }
-
-    impl From<UserProfileServiceError> for ApplicationError {
-        fn from(value: UserProfileServiceError) -> Self {
-            match value {
-                UserProfileServiceError::UnexpectedError(e) => ApplicationError::UnexpectedError(e),
-                _ => ApplicationError::UserServiceError(value),
-            }
-        }
-    }
-
-    impl From<ProfileServiceError> for ApplicationError {
-        fn from(value: ProfileServiceError) -> Self {
-            match value {
-                ProfileServiceError::UnexpectedError(e) => ApplicationError::UnexpectedError(e),
-                _ => ApplicationError::ProfileServiceError(value),
-            }
         }
     }
 }

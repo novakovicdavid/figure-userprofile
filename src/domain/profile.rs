@@ -4,6 +4,7 @@ pub use profile::ProfileDomainError;
 pub mod profile {
     use lazy_static::lazy_static;
     use regex::Regex;
+    use thiserror::Error;
     use unicode_segmentation::UnicodeSegmentation;
 
     #[derive(Debug, Clone, PartialEq)]
@@ -17,8 +18,9 @@ pub mod profile {
         user_id: i64,
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Error)]
     pub enum ProfileDomainError {
+        #[error("invalid-username")]
         InvalidUsername,
     }
 

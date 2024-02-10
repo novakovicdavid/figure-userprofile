@@ -2,16 +2,19 @@ use argon2::{Argon2, Params, PasswordHash, PasswordHasher, PasswordVerifier};
 use argon2::Algorithm::Argon2id;
 use argon2::password_hash::{Error, SaltString};
 use rand_core::OsRng;
+use thiserror::Error;
 
 pub trait SecureHasher: Send + Sync {
     fn hash_password(&self, password: &str) -> Result<String, SecureHasherError>;
     fn verify_password(&self, password: &str, saved_hash: &str) -> Result<(), SecureHasherError>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum SecureHasherError {
+    #[error(transparent)]
     UnexpectedError(anyhow::Error),
 
+    #[error("wrong-password")]
     WrongPassword,
 }
 

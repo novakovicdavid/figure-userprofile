@@ -9,4 +9,6 @@ pub mod middleware;
 pub mod misc_routes;
 pub mod secure_hasher;
 pub mod auth_connector;
+pub mod logging;
+
 pub use auth_connector::GrpcAuthConnector;
