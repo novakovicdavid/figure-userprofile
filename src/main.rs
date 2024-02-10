@@ -22,6 +22,7 @@ use crate::application::user_profile::routes::{sign_in, sign_up};
 use crate::application::user_profile::service::UserProfileService;
 use crate::environment::Environment;
 use crate::infrastructure::GrpcAuthConnector;
+use crate::infrastructure::logging::init_logging;
 use crate::infrastructure::middleware::correlation_id_layer::correlation_id_extension;
 use crate::infrastructure::middleware::session_layer::session_extension;
 use crate::infrastructure::middleware::tracing_layer::create_tracing_layer;
@@ -60,6 +61,8 @@ async fn main() -> anyhow::Result<(), anyhow::Error> {
     let time_to_start = Instant::now();
 
     let env = Environment::new()?;
+
+    init_logging(("INFO", "WARN"), env.loki_host.clone(), env.loki_url.clone()).unwrap();
 
     info!("Connecting to database...");
     let database_url = env.database_url.clone();
