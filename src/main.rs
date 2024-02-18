@@ -62,7 +62,7 @@ async fn main() -> anyhow::Result<(), anyhow::Error> {
 
     let env = Environment::new()?;
 
-    init_logging(("INFO", "WARN"), env.loki_host.clone(), env.loki_url.clone()).unwrap();
+    init_logging("INFO", "WARN").unwrap();
 
     info!("Connecting to database...");
     let database_url = env.database_url.clone();
