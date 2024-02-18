@@ -35,7 +35,7 @@ cookie = { version = "0.18.0", features = ["secure"] }
 url = "2.4.1"
 
 # gRPC
-tonic = "0.10.2"
+tonic = "0.11.0"
 prost = "0.12.3"
 
 # Data
@@ -58,4 +58,4 @@ uuid = { version = "1.4.0", features = ["v4"] }
 error-conversion-macro = { git = "https://github.com/novakovicdavid/error-conversion-macro.git" }
 
 [build-dependencies]
-tonic-build = "0.10.2"
+tonic-build = "0.11.0"
