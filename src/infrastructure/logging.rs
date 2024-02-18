@@ -7,7 +7,7 @@ use tracing_subscriber::util::SubscriberInitExt;
 pub fn init_logging(application_level: &str, library_level: &str) -> Result<(), anyhow::Error> {
     let registry = tracing_subscriber::registry();
 
-    let console_output = add_filter_to_layer(fmt::layer(), (application_level, library_level))?;
+    let console_output = add_filter_to_layer(fmt::layer(), application_level, library_level)?;
 
     registry
         .with(console_output)
@@ -16,7 +16,7 @@ pub fn init_logging(application_level: &str, library_level: &str) -> Result<(), 
     Ok(())
 }
 
-fn add_filter_to_layer<S: Subscriber>(layer: impl Layer<S>, (application_level, library_level): (&str, &str)) -> Result<Filtered<impl Layer<S>, EnvFilter, S>, anyhow::Error> {
+fn add_filter_to_layer<S: Subscriber, L: Layer<S>>(layer: L, application_level: &str, library_level: &str) -> Result<Filtered<L, EnvFilter, S>, anyhow::Error> {
     let crate_name = env!("CARGO_PKG_NAME").replace("-", "_");
 
     Ok(layer
