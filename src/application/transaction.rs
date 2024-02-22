@@ -7,7 +7,7 @@ pub trait TransactionManagerTrait<T: TransactionTrait>: Send + Sync {
 }
 
 #[async_trait]
-pub trait TransactionTrait: Send + Sync {
+pub trait TransactionTrait: 'static + Send + Sync {
     type Inner;
     async fn commit(self) -> Result<(), TransactionError>;
     fn inner(&mut self) -> &mut Self::Inner;

@@ -3,6 +3,7 @@ use std::env::VarError;
 use tracing::{error, warn};
 use crate::application::ApplicationError;
 
+#[derive(Clone)]
 pub struct Environment {
     pub database_url: String,
 

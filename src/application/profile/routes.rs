@@ -9,9 +9,9 @@ use crate::application::ApplicationError;
 use crate::application::error_handling::RouteError;
 use crate::application::profile::dtos::ProfileWithoutUserIdDTO;
 use crate::application::transaction::TransactionTrait;
+use crate::infrastructure::http::state::ServerState;
 use crate::infrastructure::session::SessionOption;
 use crate::infrastructure::to_json_string::to_json_string_with_name;
-use crate::ServerState;
 
 pub async fn get_profile<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, Path(profile_id): Path<i64>) -> impl IntoResponse {
     server_state.profile_service

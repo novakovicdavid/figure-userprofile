@@ -6,7 +6,7 @@ use http::{HeaderMap, Request, Response};
 use tower_http::classify::{ServerErrorsAsFailures, ServerErrorsFailureClass, SharedClassifier};
 use tower_http::trace::TraceLayer;
 use tracing::{error_span, Span};
-use crate::infrastructure::middleware::correlation_id_layer::CorrelationId;
+use crate::infrastructure::http::middleware::correlation_id_layer::CorrelationId;
 
 pub fn create_tracing_layer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>,
         impl Fn(&Request<Body>) -> Span + Clone, // make_span_with

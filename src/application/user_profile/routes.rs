@@ -11,9 +11,9 @@ use tower_cookies::Cookies;
 
 use crate::application::ApplicationError;
 use crate::application::transaction::TransactionTrait;
+use crate::infrastructure::http::state::ServerState;
 use crate::infrastructure::session::SessionOption;
 use crate::infrastructure::to_json_string::to_json_string_with_name;
-use crate::ServerState;
 
 #[derive(Deserialize)]
 pub struct SignUpForm {
