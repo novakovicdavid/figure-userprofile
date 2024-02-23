@@ -92,25 +92,5 @@ pub mod user {
         pub fn get_password(&self) -> &str {
             &self.password
         }
-
-        pub fn get_role(&self) -> &str {
-            &self.role
-        }
-
-        pub fn set_id(&mut self, id: String) {
-            self.id = id;
-        }
-
-        pub fn set_email(&mut self, email: String) {
-            self.email = email;
-        }
-
-        pub fn set_password(&mut self, password: String) {
-            self.password = password;
-        }
-
-        pub fn set_role(&mut self, role: String) {
-            self.role = role;
-        }
     }
 }

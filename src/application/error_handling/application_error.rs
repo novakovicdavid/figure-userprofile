@@ -1,9 +1,6 @@
 pub use application_error::ApplicationError;
 
 mod application_error {
-    use std::error::Error;
-    use std::fmt::{Display, Formatter};
-
     use axum::http::StatusCode;
     use axum::Json;
     use axum::response::IntoResponse;

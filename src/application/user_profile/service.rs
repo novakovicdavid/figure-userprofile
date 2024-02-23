@@ -13,14 +13,12 @@ use crate::domain::{Profile, User};
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
 use crate::infrastructure::secure_hasher::{SecureHasher, SecureHasherError};
-use crate::infrastructure::secure_rand_generator::RandomNumberGenerator;
 
 pub struct UserProfileService<T> {
     transaction_creator: Box<dyn TransactionManagerTrait<T>>,
     marker: PhantomData<T>,
     user_repository: Box<dyn UserRepositoryTrait<T>>,
     profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
-    secure_random_generator: Box<dyn RandomNumberGenerator>,
     secure_hasher: Box<dyn SecureHasher>,
     auth_connector: Box<dyn AuthConnector>
 }
@@ -29,8 +27,6 @@ pub struct UserProfileService<T> {
 pub enum UserProfileServiceError {
     #[error("email-already-in-use")]
     EmailAlreadyInUse,
-    #[error("wrong-password")]
-    WrongPassword,
 
     #[without_anyhow]
     #[error(transparent)]
@@ -58,14 +54,12 @@ impl<T> UserProfileService<T> where T: TransactionTrait
     pub fn new(transaction_creator: Box<dyn TransactionManagerTrait<T>>,
                user_repository: Box<dyn UserRepositoryTrait<T>>,
                profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
-               secure_random_generator: Box<dyn RandomNumberGenerator>,
                secure_hasher: Box<dyn SecureHasher>,
                auth_connector: Box<dyn AuthConnector>) -> Self {
         UserProfileService {
             user_repository,
             profile_repository,
             transaction_creator,
-            secure_random_generator,
             secure_hasher,
             auth_connector,
             marker: PhantomData::default(),

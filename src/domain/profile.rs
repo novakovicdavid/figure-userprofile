@@ -87,33 +87,5 @@ pub mod profile {
         pub fn get_user_id(&self) -> String {
             self.user_id.clone()
         }
-
-        pub fn set_id(&mut self, id: String) {
-            self.id = id;
-        }
-
-        pub fn set_username(&mut self, username: String) {
-            self.username = username;
-        }
-
-        pub fn set_display_name(&mut self, display_name: Option<String>) {
-            self.display_name = display_name
-        }
-
-        pub fn set_bio(&mut self, bio: Option<String>) {
-            self.bio = bio;
-        }
-
-        pub fn set_banner(&mut self, banner: Option<String>) {
-            self.banner = banner;
-        }
-
-        pub fn set_profile_picture(&mut self, profile_picture: Option<String>) {
-            self.profile_picture = profile_picture;
-        }
-
-        pub fn set_user_id(&mut self, user_id: String) {
-            self.user_id = user_id;
-        }
     }
 }

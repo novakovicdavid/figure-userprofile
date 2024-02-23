@@ -2,7 +2,6 @@ use http::header::{ACCEPT, CONTENT_TYPE};
 use http::Method;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
-use crate::application::transaction::TransactionTrait;
 use crate::environment::Environment;
 use crate::infrastructure::http::server::start_server;
 use crate::infrastructure::http::state::create_state;

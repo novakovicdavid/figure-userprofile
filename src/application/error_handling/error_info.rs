@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter};
 use crate::application::connectors::auth_connector::AuthConnectorError;
 use crate::application::profile::service::ProfileServiceError;
 use crate::application::transaction::TransactionError;
@@ -34,7 +33,6 @@ impl ErrorInfo for UserProfileServiceError {
         match self {
             UserProfileServiceError::UnexpectedError(_) => unreachable!(),
             UserProfileServiceError::EmailAlreadyInUse => 409,
-            UserProfileServiceError::WrongPassword => 401,
             UserProfileServiceError::UserDomainError(e) => e.status_code(),
             UserProfileServiceError::ProfileDomainError(e) => e.status_code(),
             UserProfileServiceError::RepositoryError(e) => e.status_code(),

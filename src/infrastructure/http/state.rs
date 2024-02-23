@@ -1,6 +1,4 @@
-use std::sync::Arc;
 use std::time::Instant;
-use anyhow::anyhow;
 
 use sqlx::{Pool, Postgres};
 use tokio::task;
@@ -14,7 +12,6 @@ use crate::environment::Environment;
 use crate::infrastructure::GrpcAuthConnector;
 use crate::infrastructure::profile::repository::ProfileRepository;
 use crate::infrastructure::secure_hasher::Argon2Hasher;
-use crate::infrastructure::secure_rand_generator::ChaCha20;
 use crate::infrastructure::transaction::PostgresTransactionManager;
 use crate::infrastructure::user::repository::UserRepository;
 
@@ -62,14 +59,12 @@ pub async fn create_state(env: &Environment) -> Result<ServerState<impl Transact
     let auth_connector = GrpcAuthConnector::new(env.auth_host.clone(), env.auth_port);
 
     // Initialize utilities
-    let secure_random_generator = ChaCha20::new();
     let secure_hasher = Argon2Hasher;
 
     // Initialize services
     let user_profile_service = UserProfileService::new(
         Box::new(transaction_starter.clone()), Box::new(user_repository.clone()),
         Box::new(profile_repository.clone()),
-        Box::new(secure_random_generator),
         Box::new(secure_hasher),
         Box::new(auth_connector));
 
