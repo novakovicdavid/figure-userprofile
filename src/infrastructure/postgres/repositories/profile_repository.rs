@@ -47,7 +47,7 @@ mod profile_repository {
                     match e {
                         sqlx::Error::Database(e) => {
                             if e.constraint().is_some() {
-                                return RepositoryError::ConstraintConflict
+                                return RepositoryError::ConstraintConflict;
                             }
                             RepositoryError::UnexpectedError(e.into())
                         }

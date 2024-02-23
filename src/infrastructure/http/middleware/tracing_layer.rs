@@ -1,4 +1,5 @@
 use std::time::Duration;
+
 use axum::body::Body;
 use axum::extract::MatchedPath;
 use bytes::Bytes;
@@ -6,15 +7,16 @@ use http::{HeaderMap, Request, Response};
 use tower_http::classify::{ServerErrorsAsFailures, ServerErrorsFailureClass, SharedClassifier};
 use tower_http::trace::TraceLayer;
 use tracing::{error_span, Span};
+
 use crate::infrastructure::http::middleware::correlation_id_layer::CorrelationId;
 
 pub fn create_tracing_layer() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>,
-        impl Fn(&Request<Body>) -> Span + Clone, // make_span_with
-        impl Fn(&Request<Body>, &Span) + Clone, // on_request
-        impl Fn(&Response<Body>, Duration, &Span) + Clone, // on_response
-        impl Fn(&Bytes, Duration, &Span) + Clone, // on_body_chunk
-        impl Fn(Option<&HeaderMap>, Duration, &Span) + Clone, // on_eos
-        impl Fn(ServerErrorsFailureClass, Duration, &Span) + Clone> // on_failure
+    impl Fn(&Request<Body>) -> Span + Clone, // make_span_with
+    impl Fn(&Request<Body>, &Span) + Clone, // on_request
+    impl Fn(&Response<Body>, Duration, &Span) + Clone, // on_response
+    impl Fn(&Bytes, Duration, &Span) + Clone, // on_body_chunk
+    impl Fn(Option<&HeaderMap>, Duration, &Span) + Clone, // on_eos
+    impl Fn(ServerErrorsFailureClass, Duration, &Span) + Clone> // on_failure
 {
     TraceLayer::new_for_http()
         .make_span_with(|request: &Request<_>| {

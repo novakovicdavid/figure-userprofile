@@ -20,7 +20,7 @@ pub struct UserProfileService<T> {
     user_repository: Box<dyn UserRepositoryTrait<T>>,
     profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
     secure_hasher: Box<dyn SecureHasher>,
-    auth_connector: Box<dyn AuthConnector>
+    auth_connector: Box<dyn AuthConnector>,
 }
 
 #[derive(Debug, ErrorEnum, Error)]

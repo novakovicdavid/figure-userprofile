@@ -20,7 +20,7 @@ impl SessionOption {
 #[derive(Clone)]
 pub struct Session {
     pub user_id: String,
-    pub profile_id: String
+    pub profile_id: String,
 }
 
 impl Session {

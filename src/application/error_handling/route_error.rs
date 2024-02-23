@@ -2,6 +2,7 @@ pub use route_error::RouteError;
 
 mod route_error {
     use thiserror::Error;
+
     use crate::application::error_handling::error_info::ErrorInfo;
 
     #[derive(Debug, Error)]

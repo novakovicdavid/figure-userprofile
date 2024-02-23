@@ -2,6 +2,7 @@ pub use repository_error::RepositoryError;
 
 mod repository_error {
     use thiserror::Error;
+
     use crate::application::error_handling::error_info::ErrorInfo;
 
     #[derive(Debug, Error)]

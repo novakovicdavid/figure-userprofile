@@ -2,7 +2,7 @@ syntax = "proto3";
 package auth;
 
 service Auth {
-    rpc create_session (create_session_request) returns (create_session_response);
+  rpc create_session (create_session_request) returns (create_session_response);
 }
 
 message create_session_request {
@@ -11,5 +11,5 @@ message create_session_request {
 }
 
 message create_session_response {
-    string session_token = 1;
+  string session_token = 1;
 }

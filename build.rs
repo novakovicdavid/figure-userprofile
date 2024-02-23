@@ -4,7 +4,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build_server(false)
         .compile(
             &["proto/auth.proto"],
-            &["proto/"]
+            &["proto/"],
         )?;
     Ok(())
 }
