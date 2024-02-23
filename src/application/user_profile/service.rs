@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
+
 use error_conversion_macro::ErrorEnum;
 use thiserror::Error;
+use uuid::Uuid;
 
 use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 use crate::application::error_handling::RepositoryError;
@@ -70,7 +72,7 @@ impl<T> UserProfileService<T> where T: TransactionTrait
         }
     }
 
-    pub async fn sign_up(&self, email: &str, password: &str, username: &str) -> Result<(i64, String), UserProfileServiceError> {
+    pub async fn sign_up(&self, email: &str, password: &str, username: &str) -> Result<(String, String), UserProfileServiceError> {
         User::validate_email(email)?;
         User::validate_password(password)?;
 
@@ -83,10 +85,10 @@ impl<T> UserProfileService<T> where T: TransactionTrait
 
         let mut transaction = self.transaction_creator.create().await?;
 
-        let user = User::new(0, email.to_string(), password_hash, "user".to_string())?;
+        let user = User::new(Uuid::new_v4().to_string(), email.to_string(), password_hash, "user".to_string())?;
         let user = self.user_repository.create(Some(&mut transaction), user).await?;
 
-        let profile = Profile::new(0, username.to_string(), None, None, None, None, user.get_id())?;
+        let profile = Profile::new(Uuid::new_v4().to_string(), username.to_string(), None, None, None, None, user.get_id())?;
         let profile = self.profile_repository.create(Some(&mut transaction), profile).await?;
 
         transaction.commit().await?;
@@ -98,7 +100,7 @@ impl<T> UserProfileService<T> where T: TransactionTrait
         Ok((profile.get_id(), session_id))
     }
 
-    pub async fn sign_in(&self, email: &str, password: &str) -> Result<(i64, String), UserProfileServiceError> {
+    pub async fn sign_in(&self, email: &str, password: &str) -> Result<(String, String), UserProfileServiceError> {
         User::validate_email(email)?;
         User::validate_password(password)?;
 

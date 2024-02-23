@@ -1,11 +1,12 @@
 use std::marker::PhantomData;
+
 use error_conversion_macro::ErrorEnum;
 use thiserror::Error;
 
 use crate::application::error_handling::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
-use crate::domain::Profile;
 use crate::application::transaction::TransactionTrait;
+use crate::domain::Profile;
 
 pub struct ProfileService<T> {
     profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
@@ -31,14 +32,14 @@ impl<T> ProfileService<T> {
 }
 
 impl<T> ProfileService<T> where T: TransactionTrait {
-    pub async fn find_profile_by_id(&self, profile_id: i64) -> Result<Profile, ProfileServiceError> {
+    pub async fn find_profile_by_id(&self, profile_id: String) -> Result<Profile, ProfileServiceError> {
         self
             .profile_repository.find_by_id(None, profile_id)
             .await
             .map_err(|e| e.into())
     }
 
-    pub async fn update_profile_by_id(&self, profile_id: i64, display_name: Option<String>, bio: Option<String>) -> Result<(), ProfileServiceError> {
+    pub async fn update_profile_by_id(&self, profile_id: String, display_name: Option<String>, bio: Option<String>) -> Result<(), ProfileServiceError> {
         self.profile_repository.update_profile_by_id(None, profile_id, display_name, bio)
             .await
             .map_err(|e| e.into())

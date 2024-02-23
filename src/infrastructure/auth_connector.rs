@@ -25,7 +25,7 @@ mod auth_connector {
 
     #[async_trait]
     impl AuthConnector for GrpcAuthConnector {
-        async fn create_session(&self, user_id: i64, profile_id: i64) -> Result<String, AuthConnectorError> {
+        async fn create_session(&self, user_id: String, profile_id: String) -> Result<String, AuthConnectorError> {
             let mut client = AuthClient
             ::connect(format!("https://{}:{}", self.host, self.port))
                 .await

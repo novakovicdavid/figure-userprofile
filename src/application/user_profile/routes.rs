@@ -31,11 +31,11 @@ pub struct SignInForm {
 #[derive(Serialize)]
 #[with_name(profile)]
 struct SignInResponse {
-    id: i64,
+    id: String,
 }
 
 impl SignInResponse {
-    pub fn new(id: i64) -> Self {
+    pub fn new(id: String) -> Self {
         Self {
             id,
         }

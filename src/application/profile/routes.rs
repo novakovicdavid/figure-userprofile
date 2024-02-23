@@ -13,7 +13,7 @@ use crate::infrastructure::http::state::ServerState;
 use crate::infrastructure::session::SessionOption;
 use crate::infrastructure::to_json_string::to_json_string_with_name;
 
-pub async fn get_profile<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, Path(profile_id): Path<i64>) -> impl IntoResponse {
+pub async fn get_profile<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, Path(profile_id): Path<String>) -> impl IntoResponse {
     server_state.profile_service
         .find_profile_by_id(profile_id)
         .await
@@ -47,7 +47,7 @@ pub async fn update_profile<T: TransactionTrait>(State(server_state): State<Arc<
 
     // Update profile
     server_state.profile_service
-        .update_profile_by_id(session.profile_id, display_name, bio)
+        .update_profile_by_id(session.profile_id.clone(), display_name, bio)
         .await
         .map_err(ApplicationError::from)
         .into_response()

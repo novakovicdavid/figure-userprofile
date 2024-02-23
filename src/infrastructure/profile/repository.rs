@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres, Row};
-use crate::application::RepositoryError;
 
 use crate::application::profile::repository::ProfileRepositoryTrait;
-use crate::domain::Profile;
+use crate::application::RepositoryError;
 use crate::application::transaction::TransactionTrait;
+use crate::domain::Profile;
 use crate::infrastructure::transaction::PostgresTransaction;
 
 #[derive(Clone)]
@@ -50,7 +50,7 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
             })
     }
 
-    async fn find_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: i64) -> Result<Profile, RepositoryError> {
+    async fn find_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: String) -> Result<Profile, RepositoryError> {
         let query_string = "SELECT * FROM profile WHERE id = $1";
 
         let query =
@@ -69,7 +69,7 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
         }
     }
 
-    async fn find_by_user_id(&self, transaction: Option<&mut PostgresTransaction>, user_id: i64) -> Result<Profile, RepositoryError> {
+    async fn find_by_user_id(&self, transaction: Option<&mut PostgresTransaction>, user_id: String) -> Result<Profile, RepositoryError> {
         let query_string = "SELECT * FROM profile WHERE user_id = $1";
 
         let query =
@@ -88,7 +88,7 @@ impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
         }
     }
 
-    async fn update_profile_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: i64, display_name: Option<String>, bio: Option<String>) -> Result<(), RepositoryError> {
+    async fn update_profile_by_id(&self, transaction: Option<&mut PostgresTransaction>, profile_id: String, display_name: Option<String>, bio: Option<String>) -> Result<(), RepositoryError> {
         let query_string = r#"
         UPDATE profile
         SET display_name = $1, bio = $2,

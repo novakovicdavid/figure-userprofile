@@ -9,7 +9,7 @@ pub mod user {
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct User {
-        id: i64,
+        id: String,
         email: String,
         password: String,
         role: String,
@@ -31,13 +31,13 @@ pub mod user {
     }
 
     impl User {
-        pub fn new(id: i64, email: String, password: String, role: String) -> Result<Self, UserDomainError> {
+        pub fn new(id: String, email: String, password: String, role: String) -> Result<Self, UserDomainError> {
             Self::validate_email(&email)?;
 
             Ok(Self::new_raw(id, email, password, role))
         }
 
-        pub fn new_raw(id: i64, email: String, password: String, role: String) -> Self {
+        pub fn new_raw(id: String, email: String, password: String, role: String) -> Self {
             Self {
                 id,
                 email: email.to_lowercase(),
@@ -81,8 +81,8 @@ pub mod user {
             Ok(())
         }
 
-        pub fn get_id(&self) -> i64 {
-            self.id
+        pub fn get_id(&self) -> String {
+            self.id.clone()
         }
 
         pub fn get_email(&self) -> &str {
@@ -97,7 +97,7 @@ pub mod user {
             &self.role
         }
 
-        pub fn set_id(&mut self, id: i64) {
+        pub fn set_id(&mut self, id: String) {
             self.id = id;
         }
 

@@ -19,12 +19,12 @@ impl SessionOption {
 
 #[derive(Clone)]
 pub struct Session {
-    pub user_id: i64,
-    pub profile_id: i64
+    pub user_id: String,
+    pub profile_id: String
 }
 
 impl Session {
-    pub fn new(user_id: i64, profile_id: i64) -> Self {
+    pub fn new(user_id: String, profile_id: String) -> Self {
         Self {
             user_id,
             profile_id,

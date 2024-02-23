@@ -3,7 +3,7 @@ use thiserror::Error;
 
 #[async_trait]
 pub trait AuthConnector: Send + Sync {
-    async fn create_session(&self, user_id: i64, profile_id: i64) -> Result<String, AuthConnectorError>;
+    async fn create_session(&self, user_id: String, profile_id: String) -> Result<String, AuthConnectorError>;
 }
 
 #[derive(Debug, Error)]
@@ -21,7 +21,7 @@ mod mock {
 
     use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 
-    pub struct MockAuthConnector(Arc<Mutex<Vec<(String, i64, i64)>>>);
+    pub struct MockAuthConnector(Arc<Mutex<Vec<(String, String, String)>>>);
 
     impl MockAuthConnector {
         pub fn new() -> Self {
@@ -33,19 +33,13 @@ mod mock {
 
     #[async_trait]
     impl AuthConnector for MockAuthConnector {
-        async fn create_session(&self, user_id: i64, profile_id: i64) -> Result<String, AuthConnectorError> {
+        async fn create_session(&self, user_id: String, profile_id: String) -> Result<String, AuthConnectorError> {
             let session_id = Uuid::new_v4().to_string();
 
             self.0.lock().unwrap()
-                .push((session_id.clone(), user_id, profile_id));
+                .push((session_id.clone(), user_id.clone(), profile_id.clone()));
 
-            match (user_id, profile_id) {
-                (user_id, _) if user_id < 1 => Err(AuthConnectorError::UnexpectedError(anyhow::Error::msg("invalid-user-id"))),
-
-                (_, profile_id) if profile_id < 1 => Err(AuthConnectorError::UnexpectedError(anyhow::Error::msg("invalid-profile-id"))),
-
-                (user_id, profile_id) => Ok(session_id),
-            }
+            Ok(session_id)
         }
     }
 }

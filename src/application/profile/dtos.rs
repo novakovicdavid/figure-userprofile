@@ -1,13 +1,12 @@
-use serde::Serialize;
 use derive_name::with_name;
+use serde::Serialize;
 
 use crate::domain::Profile;
-
 
 #[derive(Serialize, Debug, PartialEq)]
 #[with_name(profile)]
 pub struct ProfileDTO {
-    pub id: i64,
+    pub id: String,
     pub username: String,
     pub display_name: Option<String>,
 }
@@ -15,7 +14,7 @@ pub struct ProfileDTO {
 #[derive(Serialize, Debug)]
 #[with_name(profile)]
 pub struct ProfileWithoutUserIdDTO {
-    pub id: i64,
+    pub id: String,
     pub username: String,
     pub display_name: Option<String>,
     pub bio: Option<String>,
