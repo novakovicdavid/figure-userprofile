@@ -12,49 +12,49 @@ futures = "0.3.29"
 tokio = { version = "1.34.0", features = ["full"] }
 
 # Error handling
-anyhow = { version = "1.0.75", features = ["backtrace"] }
-thiserror = "1.0.56"
+anyhow = { version = "1.0.80", features = ["backtrace"] }
+thiserror = "1.0.57"
 
 # Logging
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
 # HTTP
-serde = { version = "1.0.192", features = ["derive"] }
-serde_json = "1.0.108"
-axum = { version = "0.7.2", features = ["multipart"] }
-axum-macros = "0.4.0"
-axum-core = "0.4.1"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+axum = { version = "0.7.4", features = ["multipart"] }
+axum-macros = "0.4.1"
+axum-core = "0.4.3"
 tower = "0.4.13"
-tower-http = { version = "0.5.0", features = ["cors", "limit", "trace", "tracing"] }
+tower-http = { version = "0.5.2", features = ["cors", "limit", "trace", "tracing"] }
 tower-cookies = { version = "0.10.0", features = ["signed", "private"] }
-hyper = "1.0.0"
+hyper = "1.2.0"
 http = "1.0.0"
 http-body = "1.0.0"
 cookie = { version = "0.18.0", features = ["secure"] }
-url = "2.4.1"
+url = "2.5.0"
 
 # gRPC
 tonic = "0.11.0"
 prost = "0.12.3"
 
 # Data
-sqlx = { version = "0.7.2", features = ["runtime-tokio-rustls", "postgres"] }
+sqlx = { version = "0.7.3", features = ["runtime-tokio-rustls", "postgres"] }
 redis = { version = "0.24.0", features = ["tokio-comp", "tokio-rustls-comp", "connection-manager"] }
 
 # Security
-argon2 = { version = "0.5.2", features = ["std"] }
+argon2 = { version = "0.5.3", features = ["std"] }
 rand_core = "0.6.4"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 
 # Other
-unicode-segmentation = "1.10.1"
-regex = "1.10.2"
+unicode-segmentation = "1.11.0"
+regex = "1.10.3"
 lazy_static = "1.4.0"
 derive-name = { git = "https://github.com/novakovicdavid/derive-name.git" }
 bytes = "1.5.0"
-uuid = { version = "1.4.0", features = ["v4"] }
+uuid = { version = "1.7.0", features = ["v4"] }
 error-conversion-macro = { git = "https://github.com/novakovicdavid/error-conversion-macro.git" }
 
 [build-dependencies]
