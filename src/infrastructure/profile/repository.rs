@@ -22,21 +22,24 @@ impl ProfileRepository {
 
 #[async_trait]
 impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
-    async fn create(&self, transaction: Option<&mut PostgresTransaction>, profile: Profile) -> Result<Profile, RepositoryError> {
+    async fn create(&self, transaction: Option<&mut PostgresTransaction>, profile: &Profile) -> Result<(), RepositoryError> {
         let query_string = r#"
         INSERT INTO profile (username, user_id)
         VALUES ($1, $2)
         RETURNING id, username, user_id
         "#;
 
-        let query = sqlx::query_as::<_, Profile>(&query_string)
+        let query = sqlx::query(&query_string)
             .bind(profile.get_username())
             .bind(profile.get_user_id());
 
-        match transaction {
+        let query_result = match transaction {
             Some(transaction) => query.fetch_one(transaction.inner()).await,
             None => query.fetch_one(&self.db).await
-        }
+        };
+
+        query_result
+            .map(|_| ())
             .map_err(|e| {
                 match e {
                     sqlx::Error::Database(e) => {

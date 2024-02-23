@@ -23,21 +23,23 @@ impl UserRepository {
 
 #[async_trait]
 impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
-    async fn create(&self, transaction: Option<&mut PostgresTransaction>, user: User) -> Result<User, RepositoryError> {
+    async fn create(&self, transaction: Option<&mut PostgresTransaction>, user: &User) -> Result<(), RepositoryError> {
         let query_string = r#"
         INSERT INTO "user" (email password, role)
         VALUES ($1, $2, 'user')
-        RETURNING id, email, password, role
         "#;
 
-        let query = sqlx::query_as::<_, User>(&query_string)
+        let query = sqlx::query(&query_string)
             .bind(user.get_email())
             .bind(user.get_password());
 
-        match transaction {
-            Some(transaction) => query.fetch_one(transaction.inner()).await,
-            None => query.fetch_one(&self.db).await
-        }
+        let query_result = match transaction {
+            Some(transaction) => query.execute(transaction.inner()).await,
+            None => query.execute(&self.db).await
+        };
+
+        query_result
+            .map(|_| ())
             .map_err(|e| {
                 match e {
                     Error::Database(e) => {

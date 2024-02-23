@@ -86,10 +86,10 @@ impl<T> UserProfileService<T> where T: TransactionTrait
         let mut transaction = self.transaction_creator.create().await?;
 
         let user = User::new(Uuid::new_v4().to_string(), email.to_string(), password_hash, "user".to_string())?;
-        let user = self.user_repository.create(Some(&mut transaction), user).await?;
+        self.user_repository.create(Some(&mut transaction), &user).await?;
 
         let profile = Profile::new(Uuid::new_v4().to_string(), username.to_string(), None, None, None, None, user.get_id())?;
-        let profile = self.profile_repository.create(Some(&mut transaction), profile).await?;
+        self.profile_repository.create(Some(&mut transaction), &profile).await?;
 
         transaction.commit().await?;
 
