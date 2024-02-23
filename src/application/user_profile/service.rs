@@ -108,6 +108,10 @@ impl<T> UserProfileService<T> where T: TransactionTrait
 
         let profile = self.profile_repository.find_by_user_id(None, user.get_id()).await?;
 
-        Ok((1, "d".to_string()))
+        let session_id = self.auth_connector
+            .create_session(user.get_id(), profile.get_id())
+            .await?;
+
+        Ok((profile.get_id(), session_id))
     }
 }
