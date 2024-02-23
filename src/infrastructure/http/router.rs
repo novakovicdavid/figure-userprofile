@@ -12,9 +12,8 @@ use crate::infrastructure::http::middleware::correlation_id_layer::correlation_i
 use crate::infrastructure::http::middleware::session_layer::session_extension;
 use crate::infrastructure::http::middleware::tracing_layer::create_tracing_layer;
 use crate::infrastructure::http::misc_routes::healthcheck;
+use crate::infrastructure::http::routers::{profile_router, user_router};
 use crate::infrastructure::http::state::ServerState;
-use crate::infrastructure::profile::router::profile_router;
-use crate::infrastructure::user::router::user_router;
 
 pub fn create_router<T: TransactionTrait>(server_state: Arc<ServerState<T>>, cors: &String) -> Result<Router, anyhow::Error> {
     let cors_layer = create_cors_layer([cors.parse()?]);

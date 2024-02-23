@@ -10,10 +10,10 @@ use crate::application::transaction::TransactionTrait;
 use crate::application::user_profile::service::UserProfileService;
 use crate::environment::Environment;
 use crate::infrastructure::GrpcAuthConnector;
-use crate::infrastructure::profile::repository::ProfileRepository;
+use crate::infrastructure::postgres::PostgresTransactionManager;
+use crate::infrastructure::postgres::repositories::profile_repository::ProfileRepository;
+use crate::infrastructure::postgres::repositories::user_repository::UserRepository;
 use crate::infrastructure::secure_hasher::Argon2Hasher;
-use crate::infrastructure::transaction::PostgresTransactionManager;
-use crate::infrastructure::user::repository::UserRepository;
 
 pub struct ServerState<T> {
     pub user_service: UserProfileService<T>,

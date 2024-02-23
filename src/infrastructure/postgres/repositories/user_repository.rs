@@ -6,7 +6,7 @@ use crate::application::RepositoryError;
 use crate::application::transaction::TransactionTrait;
 use crate::application::user_profile::repository::UserRepositoryTrait;
 use crate::domain::User;
-use crate::infrastructure::transaction::PostgresTransaction;
+use crate::infrastructure::postgres::transaction::PostgresTransaction;
 
 #[derive(Clone)]
 pub struct UserRepository {
