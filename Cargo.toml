@@ -56,6 +56,7 @@ derive-name = { git = "https://github.com/novakovicdavid/derive-name.git" }
 bytes = "1.5.0"
 uuid = { version = "1.7.0", features = ["v4"] }
 error-conversion-macro = { git = "https://github.com/novakovicdavid/error-conversion-macro.git" }
+futures-util = "0.3.30"
 
 [build-dependencies]
 tonic-build = "0.11.0"
