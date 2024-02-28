@@ -45,18 +45,29 @@ pub async fn create_state(env: &Environment) -> Result<ServerState<impl Transact
             })
     });
 
+    let auth_host = env.auth_host.clone();
+    let auth_port = env.auth_port;
+    let auth_connector_future = task::spawn(async move {
+        let time = Instant::now();
+        GrpcAuthConnector::connect(auth_host, auth_port)
+            .await
+            .map(|connector| {
+                info!("Connected to auth microservice in {}ms...", time.elapsed().as_millis());
+                connector
+            })
+    });
+
     let domain = Url::parse(&env.origin)?.host_str().unwrap().to_string();
     info!("Domain parsed from origin: {}", domain);
 
-    info!("Waiting for stores...");
+    info!("Waiting for connections...");
     let db_pool = db_pool_future.await??;
+    let auth_connector = auth_connector_future.await??;
 
     // Initialize repositories
     let transaction_starter = PostgresTransactionManager::new(db_pool.clone());
     let user_repository = UserRepository::new(db_pool.clone());
     let profile_repository = ProfileRepository::new(db_pool.clone());
-
-    let auth_connector = GrpcAuthConnector::new(env.auth_host.clone(), env.auth_port);
 
     // Initialize utilities
     let secure_hasher = Argon2Hasher;
