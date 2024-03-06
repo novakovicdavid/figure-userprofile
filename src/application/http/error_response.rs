@@ -3,7 +3,7 @@ use axum_core::response::{IntoResponse, Response};
 use figure_lib::error_handling::IntoHttpStatusCode;
 use http::StatusCode;
 use serde::Serialize;
-use tracing::{error, Instrument, Span};
+use tracing::error;
 
 use crate::application::ApplicationError;
 use crate::application::connectors::auth_connector::AuthConnectorError;
@@ -22,21 +22,12 @@ pub struct ErrorResponse<'a> {
 
 impl IntoResponse for ApplicationError {
     fn into_response(self) -> Response {
+        if let ApplicationError::UnexpectedError(ref e) = self {
+            error!("Internal server error: {}\n{}", e, e.backtrace());
+        }
+
         let error_str = self.to_string();
-
-        let status_code = match self {
-            ApplicationError::UnexpectedError(error) => {
-                tokio::task::spawn(async move {
-                    error!("Internal server error: {}\n{}", error, error.backtrace());
-                }.instrument(Span::current()));
-
-                500
-            }
-
-            ApplicationError::UserProfileServiceError(e) => e.status_code(),
-            ApplicationError::ProfileServiceError(e) => e.status_code(),
-            ApplicationError::RouteError(e) => e.status_code(),
-        };
+        let status_code = self.status_code();
 
         (
             StatusCode::from_u16(status_code).unwrap(),
