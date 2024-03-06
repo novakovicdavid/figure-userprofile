@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::application::error_handling::RepositoryError;
+use crate::application::errors::RepositoryError;
 use crate::domain::user::user::User;
 
 #[async_trait]

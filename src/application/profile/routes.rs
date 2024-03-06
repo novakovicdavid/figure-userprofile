@@ -6,7 +6,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 
 use crate::application::ApplicationError;
-use crate::application::error_handling::RouteError;
+use crate::application::errors::RouteError;
 use crate::application::profile::dtos::ProfileWithoutUserIdDTO;
 use crate::application::transaction::TransactionTrait;
 use crate::infrastructure::http::state::ServerState;

@@ -5,7 +5,7 @@ use thiserror::Error;
 use uuid::Uuid;
 
 use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
-use crate::application::error_handling::RepositoryError;
+use crate::application::errors::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
 use crate::application::user_profile::repository::UserRepositoryTrait;

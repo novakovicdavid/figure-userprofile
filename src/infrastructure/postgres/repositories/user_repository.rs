@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Error, FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
 
-use crate::application::RepositoryError;
+use crate::application::errors::RepositoryError;
 use crate::application::transaction::TransactionTrait;
 use crate::application::user_profile::repository::UserRepositoryTrait;
 use crate::domain::User;

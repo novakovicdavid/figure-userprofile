@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use error_conversion_macro::ErrorEnum;
 use thiserror::Error;
 
-use crate::application::error_handling::RepositoryError;
+use crate::application::errors::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::transaction::TransactionTrait;
 use crate::domain::Profile;

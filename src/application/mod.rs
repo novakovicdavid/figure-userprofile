@@ -1,10 +1,10 @@
-pub use error_handling::ApplicationError;
-pub use error_handling::RepositoryError;
+pub use application_error::ApplicationError;
 
 pub mod user_profile;
 pub mod profile;
 pub mod transaction;
-
-mod error_handling;
 pub mod connectors;
+pub mod http;
+mod application_error;
+pub mod errors;
 

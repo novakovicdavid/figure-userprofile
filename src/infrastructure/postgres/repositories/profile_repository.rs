@@ -4,8 +4,8 @@ mod profile_repository {
     use async_trait::async_trait;
     use sqlx::{Pool, Postgres, Row};
 
+    use crate::application::errors::RepositoryError;
     use crate::application::profile::repository::ProfileRepositoryTrait;
-    use crate::application::RepositoryError;
     use crate::application::transaction::TransactionTrait;
     use crate::domain::Profile;
     use crate::infrastructure::postgres::transaction::PostgresTransaction;
