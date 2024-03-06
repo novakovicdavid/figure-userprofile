@@ -22,5 +22,6 @@ fn add_filter_to_layer<S: Subscriber, L: Layer<S>>(layer: L, application_level: 
     Ok(layer
         .with_filter(EnvFilter::default()
             .add_directive(library_level.parse()?)
+            .add_directive(format!("figure_lib={}", application_level).parse()?)
             .add_directive(format!("{crate_name}={}", application_level).parse()?)))
 }
