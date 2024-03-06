@@ -1,8 +1,8 @@
+use figure_lib::middleware::correlation_id::get_correlation_id;
 use tonic::{Request, Status};
 use tonic::service::Interceptor;
 
 pub use auth_connector::GrpcAuthConnector;
-use crate::infrastructure::http::middleware::correlation_id_layer::get_correlation_id;
 
 mod auth_connector {
     use std::str::FromStr;
