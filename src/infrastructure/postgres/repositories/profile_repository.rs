@@ -27,12 +27,13 @@ mod profile_repository {
     impl ProfileRepositoryTrait<PostgresTransaction> for ProfileRepository {
         async fn create(&self, transaction: Option<&mut PostgresTransaction>, profile: &Profile) -> Result<(), RepositoryError> {
             let query_string = r#"
-        INSERT INTO profile (username, user_id)
-        VALUES ($1, $2)
+        INSERT INTO profile (id, username, user_id)
+        VALUES ($1, $2, $3)
         RETURNING id, username, user_id
         "#;
 
             let query = sqlx::query(&query_string)
+                .bind(profile.get_id())
                 .bind(profile.get_username())
                 .bind(profile.get_user_id());
 

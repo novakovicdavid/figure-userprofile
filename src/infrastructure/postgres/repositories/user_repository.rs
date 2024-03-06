@@ -25,11 +25,12 @@ impl UserRepository {
 impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
     async fn create(&self, transaction: Option<&mut PostgresTransaction>, user: &User) -> Result<(), RepositoryError> {
         let query_string = r#"
-        INSERT INTO "user" (email password, role)
-        VALUES ($1, $2, 'user')
+        INSERT INTO "user" (id, email, password, role)
+        VALUES ($1, $2, $3, 'user')
         "#;
 
         let query = sqlx::query(&query_string)
+            .bind(user.get_id())
             .bind(user.get_email())
             .bind(user.get_password());
 
