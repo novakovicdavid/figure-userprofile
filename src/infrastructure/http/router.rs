@@ -8,11 +8,11 @@ use http::header::{ACCEPT, CONTENT_TYPE};
 use http::Method;
 use tower_cookies::CookieManagerLayer;
 use tower_http::cors::{AllowOrigin, CorsLayer};
+use crate::application::http::routers::{profile_router, user_router};
 
 use crate::application::transaction::TransactionTrait;
 use crate::infrastructure::http::middleware::session_layer::session_extension;
 use crate::infrastructure::http::misc_routes::healthcheck;
-use crate::infrastructure::http::routers::{profile_router, user_router};
 use crate::infrastructure::http::state::ServerState;
 
 pub fn create_router<T: TransactionTrait>(server_state: Arc<ServerState<T>>, cors: &String) -> Result<Router, anyhow::Error> {
