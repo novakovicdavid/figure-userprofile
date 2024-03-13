@@ -1,16 +1,16 @@
 use std::time::Instant;
 
+use figure_lib::rdbs::postgres::transaction::PostgresTransactionManager;
+use figure_lib::rdbs::transaction::TransactionTrait;
 use sqlx::{Pool, Postgres};
 use tokio::task;
-use tracing::info;
+use tracing::log::info;
 use url::Url;
 
 use crate::application::profile::service::ProfileService;
-use crate::application::transaction::TransactionTrait;
 use crate::application::user_profile::service::UserProfileService;
 use crate::environment::Environment;
 use crate::infrastructure::GrpcAuthConnector;
-use crate::infrastructure::postgres::PostgresTransactionManager;
 use crate::infrastructure::postgres::repositories::profile_repository::ProfileRepository;
 use crate::infrastructure::postgres::repositories::user_repository::UserRepository;
 use crate::infrastructure::secure_hasher::Argon2Hasher;

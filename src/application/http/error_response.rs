@@ -3,13 +3,12 @@ use axum_core::response::{IntoResponse, Response};
 use figure_lib::error_handling::IntoHttpStatusCode;
 use http::StatusCode;
 use serde::Serialize;
-use tracing::error;
+use tracing::log::error;
 
 use crate::application::ApplicationError;
 use crate::application::connectors::auth_connector::AuthConnectorError;
 use crate::application::errors::{RepositoryError, RouteError};
 use crate::application::profile::service::ProfileServiceError;
-use crate::application::transaction::TransactionError;
 use crate::application::user_profile::service::UserProfileServiceError;
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
@@ -54,7 +53,7 @@ impl IntoHttpStatusCode for UserDomainError {
         match self {
             UserDomainError::InvalidEmail => 400,
             UserDomainError::PasswordTooShort => 400,
-            UserDomainError::PasswordTooLong => 400
+            UserDomainError::PasswordTooLong => 400,
         }
     }
 }
@@ -96,14 +95,6 @@ impl IntoHttpStatusCode for SecureHasherError {
         match self {
             SecureHasherError::UnexpectedError(_) => unreachable!(),
             SecureHasherError::WrongPassword => 401
-        }
-    }
-}
-
-impl IntoHttpStatusCode for TransactionError {
-    fn status_code(&self) -> u16 {
-        match self {
-            TransactionError::UnexpectedError(_) => unreachable!()
         }
     }
 }

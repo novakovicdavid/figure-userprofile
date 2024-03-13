@@ -3,7 +3,7 @@ pub use application_error::ApplicationError;
 mod application_error {
     use error_conversion_macro::ErrorEnum;
     use thiserror::Error;
-    use tracing::error;
+    use tracing::log::error;
 
     use crate::application::errors::RouteError;
     use crate::application::profile::service::ProfileServiceError;

@@ -5,11 +5,11 @@ mod profile_router {
 
     use axum::Router;
     use axum::routing::{get, post};
+    use figure_lib::rdbs::transaction::TransactionTrait;
     use tower_http::limit::RequestBodyLimitLayer;
 
     use crate::application::profile::routes::{get_profile, get_total_profiles_count, update_profile};
-    use crate::application::transaction::TransactionTrait;
-    use crate::infrastructure::http::state::ServerState;
+    use crate::state::ServerState;
 
     pub fn profile_router<T: TransactionTrait>() -> Router<Arc<ServerState<T>>> {
         Router::new()

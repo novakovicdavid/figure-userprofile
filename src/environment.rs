@@ -1,7 +1,7 @@
 use std::env;
 use std::env::VarError;
 
-use tracing::{error, warn};
+use tracing::log::{error, warn};
 
 use crate::application::ApplicationError;
 

@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
 use error_conversion_macro::ErrorEnum;
+use figure_lib::rdbs::transaction::TransactionTrait;
 use thiserror::Error;
 
 use crate::application::errors::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
-use crate::application::transaction::TransactionTrait;
 use crate::domain::Profile;
 
 pub struct ProfileService<T> {

@@ -4,12 +4,12 @@ use axum::Extension;
 use axum::extract::{Multipart, Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use figure_lib::rdbs::transaction::TransactionTrait;
 
 use crate::application::ApplicationError;
 use crate::application::errors::RouteError;
 use crate::application::profile::dtos::ProfileWithoutUserIdDTO;
-use crate::application::transaction::TransactionTrait;
-use crate::infrastructure::http::state::ServerState;
+use crate::state::ServerState;
 use crate::infrastructure::session::SessionOption;
 use crate::infrastructure::to_json_string::to_json_string_with_name;
 

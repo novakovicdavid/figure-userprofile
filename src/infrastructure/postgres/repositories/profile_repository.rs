@@ -2,13 +2,13 @@ pub use profile_repository::ProfileRepository;
 
 mod profile_repository {
     use async_trait::async_trait;
+    use figure_lib::rdbs::postgres::transaction::PostgresTransaction;
+    use figure_lib::rdbs::transaction::TransactionTrait;
     use sqlx::{Pool, Postgres, Row};
 
     use crate::application::errors::RepositoryError;
     use crate::application::profile::repository::ProfileRepositoryTrait;
-    use crate::application::transaction::TransactionTrait;
     use crate::domain::Profile;
-    use crate::infrastructure::postgres::transaction::PostgresTransaction;
 
     #[derive(Clone)]
     pub struct ProfileRepository {

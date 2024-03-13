@@ -31,13 +31,14 @@ pub mod user {
     }
 
     impl User {
-        pub fn new(id: String, email: String, password: String, role: String) -> Result<Self, UserDomainError> {
+        pub fn register(id: String, email: String, password: String, role: String) -> Result<Self, UserDomainError> {
             Self::validate_email(&email)?;
+            Self::validate_password(&password)?;
 
-            Ok(Self::new_raw(id, email, password, role))
+            Ok(Self::new_unchecked(id, email, password, role))
         }
 
-        pub fn new_raw(id: String, email: String, password: String, role: String) -> Self {
+        pub fn new_unchecked(id: String, email: String, password: String, role: String) -> Self {
             Self {
                 id,
                 email: email.to_lowercase(),

@@ -1,13 +1,14 @@
 use std::marker::PhantomData;
 
 use error_conversion_macro::ErrorEnum;
+use figure_lib::rdbs::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
 use thiserror::Error;
+use tracing::log::error;
 use uuid::Uuid;
 
 use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 use crate::application::errors::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
-use crate::application::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
 use crate::application::user_profile::repository::UserRepositoryTrait;
 use crate::domain::{Profile, User};
 use crate::domain::profile::ProfileDomainError;
@@ -79,8 +80,8 @@ impl<T> UserProfileService<T> where T: TransactionTrait
 
         let mut transaction = self.transaction_creator.create().await?;
 
-        let user = User::new(Uuid::new_v4().to_string(), email.to_string(), password_hash, "user".to_string())?;
-        self.user_repository.create(Some(&mut transaction), &user).await?;
+        let user = User::register(Uuid::new_v4().to_string(), email.to_string(), password_hash, "user".to_string())?;
+        self.user_repository.insert(Some(&mut transaction), &user).await?;
 
         let profile = Profile::new(Uuid::new_v4().to_string(), username.to_string(), None, None, None, None, user.get_id())?;
         self.profile_repository.create(Some(&mut transaction), &profile).await?;

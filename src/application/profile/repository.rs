@@ -1,7 +1,7 @@
 use async_trait::async_trait;
+use figure_lib::rdbs::transaction::TransactionTrait;
 
 use crate::application::errors::RepositoryError;
-use crate::application::transaction::TransactionTrait;
 use crate::domain::Profile;
 
 #[async_trait]

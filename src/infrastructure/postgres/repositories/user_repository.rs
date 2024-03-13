@@ -1,12 +1,12 @@
 use async_trait::async_trait;
+use figure_lib::rdbs::postgres::transaction::PostgresTransaction;
+use figure_lib::rdbs::transaction::TransactionTrait;
 use sqlx::{Error, FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
 
 use crate::application::errors::RepositoryError;
-use crate::application::transaction::TransactionTrait;
 use crate::application::user_profile::repository::UserRepositoryTrait;
 use crate::domain::User;
-use crate::infrastructure::postgres::transaction::PostgresTransaction;
 
 #[derive(Clone)]
 pub struct UserRepository {
@@ -23,7 +23,7 @@ impl UserRepository {
 
 #[async_trait]
 impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
-    async fn create(&self, transaction: Option<&mut PostgresTransaction>, user: &User) -> Result<(), RepositoryError> {
+    async fn insert(&self, transaction: Option<&mut PostgresTransaction>, user: &User) -> Result<(), RepositoryError> {
         let query_string = r#"
         INSERT INTO "user" (id, email, password, role)
         VALUES ($1, $2, $3, 'user')
@@ -111,6 +111,6 @@ impl FromRow<'_, PgRow> for User {
         let password: String = row.try_get("password")?;
         let role: String = row.try_get("role")?;
 
-        Ok(User::new_raw(id, email, password, role))
+        Ok(User::new_unchecked(id, email, password, role))
     }
 }
