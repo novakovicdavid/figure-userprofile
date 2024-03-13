@@ -1,8 +1,9 @@
 use async_trait::async_trait;
 use figure_lib::rdbs::postgres::transaction::PostgresTransaction;
 use figure_lib::rdbs::transaction::TransactionTrait;
-use sqlx::{Error, FromRow, Pool, Postgres, Row};
+use sqlx::{Error, FromRow, Pool, Postgres, query, Row};
 use sqlx::postgres::PgRow;
+use sqlx::query::Query;
 
 use crate::application::errors::RepositoryError;
 use crate::application::user_profile::repository::UserRepositoryTrait;
@@ -100,6 +101,28 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
                 _ => RepositoryError::UnexpectedError(e.into())
             }
         })
+    }
+
+    async fn update(&self, transaction: Option<&mut PostgresTransaction>, user: &User) -> Result<(), RepositoryError> {
+        let query: Query<_, _> = query!(r#"
+        UPDATE "user"
+        SET email = $1, password = $2, role = $3
+        WHERE id = $4
+        "#, user.get_email(),
+            user.get_password(),
+            user.get_role(),
+            user.get_id());
+
+        let result = match transaction {
+            Some(transaction) => query.execute(transaction.inner()).await,
+            None => query.execute(&self.db).await
+        };
+
+        result
+            .map(|_| ())
+            .map_err(|e| RepositoryError::UnexpectedError(e.into()))?;
+
+        Ok(())
     }
 }
 

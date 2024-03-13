@@ -2,10 +2,15 @@ pub use user::User;
 pub use user::UserDomainError;
 
 pub mod user {
+    use std::time::SystemTime;
+
+    use figure_lib::queue::events::user::PasswordChangedEvent;
     use lazy_static::lazy_static;
     use regex::Regex;
     use thiserror::Error;
     use unicode_segmentation::UnicodeSegmentation;
+
+    use crate::infrastructure::secure_hasher::SecureHasher;
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct User {
@@ -17,6 +22,8 @@ pub mod user {
 
     #[derive(Debug, Error)]
     pub enum UserDomainError {
+        #[error(transparent)]
+        UnexpectedError(anyhow::Error),
         #[error("invalid-email")]
         InvalidEmail,
         #[error("password-too-short")]
@@ -92,6 +99,25 @@ pub mod user {
 
         pub fn get_password(&self) -> &str {
             &self.password
+        }
+
+        pub fn get_role(&self) -> &str {
+            &self.role
+        }
+
+        pub fn set_password(&mut self, password: String, hasher: &Box<dyn SecureHasher>)
+                            -> Result<PasswordChangedEvent, UserDomainError> {
+            Self::validate_password(&password)?;
+
+            self.password = hasher.hash_password(&password)
+                .map_err(|e| UserDomainError::UnexpectedError(e.into()))?;
+
+            let datetime_changed = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .map_err(|e| UserDomainError::UnexpectedError(e.into()))?
+                .as_millis();
+
+            Ok(PasswordChangedEvent::new(self.id.clone(), datetime_changed))
         }
     }
 }

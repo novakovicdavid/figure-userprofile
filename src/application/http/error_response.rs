@@ -51,6 +51,7 @@ impl IntoHttpStatusCode for ApplicationError {
 impl IntoHttpStatusCode for UserDomainError {
     fn status_code(&self) -> u16 {
         match self {
+            UserDomainError::UnexpectedError(_) => unreachable!(),
             UserDomainError::InvalidEmail => 400,
             UserDomainError::PasswordTooShort => 400,
             UserDomainError::PasswordTooLong => 400,
@@ -73,6 +74,7 @@ impl IntoHttpStatusCode for UserProfileServiceError {
             UserProfileServiceError::EmailAlreadyInUse => 409,
             UserProfileServiceError::UserDomainError(e) => e.status_code(),
             UserProfileServiceError::ProfileDomainError(e) => e.status_code(),
+            UserProfileServiceError::OutboxError(e) => e.status_code(),
             UserProfileServiceError::RepositoryError(e) => e.status_code(),
             UserProfileServiceError::TransactionError(e) => e.status_code(),
             UserProfileServiceError::SecureHasherError(e) => e.status_code(),

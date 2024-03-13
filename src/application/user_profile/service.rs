@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
 use error_conversion_macro::ErrorEnum;
+use figure_lib::middleware::correlation_id::get_correlation_id;
+use figure_lib::queue::events::CreateEvent;
+use figure_lib::rdbs::outbox_repository::{Outbox, OutboxError};
 use figure_lib::rdbs::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
 use thiserror::Error;
 use tracing::log::error;
@@ -20,6 +23,7 @@ pub struct UserProfileService<T> {
     marker: PhantomData<T>,
     user_repository: Box<dyn UserRepositoryTrait<T>>,
     profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
+    outbox_repository: Box<dyn Outbox<T>>,
     secure_hasher: Box<dyn SecureHasher>,
     auth_connector: Box<dyn AuthConnector>,
 }
@@ -45,6 +49,8 @@ pub enum UserProfileServiceError {
     SecureHasherError(SecureHasherError),
     #[error(transparent)]
     AuthConnectorError(AuthConnectorError),
+    #[error(transparent)]
+    OutboxError(OutboxError),
 
     #[error(transparent)]
     UnexpectedError(anyhow::Error),
@@ -55,6 +61,7 @@ impl<T> UserProfileService<T> where T: TransactionTrait
     pub fn new(transaction_creator: Box<dyn TransactionManagerTrait<T>>,
                user_repository: Box<dyn UserRepositoryTrait<T>>,
                profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
+               outbox_repository: Box<dyn Outbox<T>>,
                secure_hasher: Box<dyn SecureHasher>,
                auth_connector: Box<dyn AuthConnector>) -> Self {
         UserProfileService {
@@ -64,6 +71,7 @@ impl<T> UserProfileService<T> where T: TransactionTrait
             secure_hasher,
             auth_connector,
             marker: PhantomData::default(),
+            outbox_repository,
         }
     }
 
@@ -110,5 +118,27 @@ impl<T> UserProfileService<T> where T: TransactionTrait
             .await?;
 
         Ok((profile.get_id(), session_id))
+    }
+
+    pub async fn reset_password(&self, email: &str, old_password: &str, new_password: String) -> Result<(), UserProfileServiceError> {
+        User::validate_password(&new_password)?;
+
+        let mut user = self.user_repository.find_one_by_email(None, email).await?;
+
+        self.secure_hasher.verify_password(old_password, user.get_password())?;
+
+        let event = user.set_password(new_password, &self.secure_hasher)?;
+
+        let mut transaction = self.transaction_creator.create().await?;
+
+        self.user_repository.update(Some(&mut transaction), &user).await?;
+
+        let correlation_id = get_correlation_id().unwrap();
+
+        self.outbox_repository.insert(&mut transaction, CreateEvent::new(correlation_id, Box::new(event))).await?;
+
+        transaction.commit().await?;
+
+        Ok(())
     }
 }

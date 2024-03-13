@@ -1,5 +1,6 @@
 use std::time::Instant;
 
+use figure_lib::rdbs::postgres::outbox::PostgresOutbox;
 use figure_lib::rdbs::postgres::transaction::PostgresTransactionManager;
 use figure_lib::rdbs::transaction::TransactionTrait;
 use sqlx::{Pool, Postgres};
@@ -68,6 +69,7 @@ pub async fn create_state(env: &Environment) -> Result<ServerState<impl Transact
     let transaction_starter = PostgresTransactionManager::new(db_pool.clone());
     let user_repository = UserRepository::new(db_pool.clone());
     let profile_repository = ProfileRepository::new(db_pool.clone());
+    let outbox_repository = PostgresOutbox::new();
 
     // Initialize utilities
     let secure_hasher = Argon2Hasher;
@@ -76,6 +78,7 @@ pub async fn create_state(env: &Environment) -> Result<ServerState<impl Transact
     let user_profile_service = UserProfileService::new(
         Box::new(transaction_starter.clone()), Box::new(user_repository.clone()),
         Box::new(profile_repository.clone()),
+        Box::new(outbox_repository),
         Box::new(secure_hasher),
         Box::new(auth_connector));
 

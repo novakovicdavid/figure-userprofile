@@ -8,4 +8,5 @@ pub trait UserRepositoryTrait<T>: Send + Sync {
     async fn insert(&self, transaction: Option<&mut T>, user: &User) -> Result<(), RepositoryError>;
     async fn find_one_by_email(&self, transaction: Option<&mut T>, email: &str) -> Result<User, RepositoryError>;
     async fn find_by_id(&self, transaction: Option<&mut T>, id: i64) -> Result<User, RepositoryError>;
+    async fn update(&self, transaction: Option<&mut T>, user: &User) -> Result<(), RepositoryError>;
 }
