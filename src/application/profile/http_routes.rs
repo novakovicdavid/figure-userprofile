@@ -9,9 +9,9 @@ use figure_lib::rdbs::transaction::TransactionTrait;
 use crate::application::ApplicationError;
 use crate::application::errors::RouteError;
 use crate::application::profile::dtos::ProfileWithoutUserIdDTO;
-use crate::state::ServerState;
 use crate::infrastructure::session::SessionOption;
 use crate::infrastructure::to_json_string::to_json_string_with_name;
+use crate::state::ServerState;
 
 pub async fn get_profile<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, Path(profile_id): Path<String>) -> impl IntoResponse {
     server_state.profile_service

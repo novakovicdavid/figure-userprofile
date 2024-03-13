@@ -7,7 +7,7 @@ mod user_router {
     use axum::routing::post;
     use figure_lib::rdbs::transaction::TransactionTrait;
 
-    use crate::application::user_profile::routes::{sign_in, sign_up};
+    use crate::application::user_profile::http_routes::{sign_in, sign_up};
     use crate::state::ServerState;
 
     pub fn user_router<T: TransactionTrait>() -> Router<Arc<ServerState<T>>> {

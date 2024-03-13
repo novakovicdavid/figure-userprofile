@@ -8,7 +8,7 @@ mod profile_router {
     use figure_lib::rdbs::transaction::TransactionTrait;
     use tower_http::limit::RequestBodyLimitLayer;
 
-    use crate::application::profile::routes::{get_profile, get_total_profiles_count, update_profile};
+    use crate::application::profile::http_routes::{get_profile, get_total_profiles_count, update_profile};
     use crate::state::ServerState;
 
     pub fn profile_router<T: TransactionTrait>() -> Router<Arc<ServerState<T>>> {
