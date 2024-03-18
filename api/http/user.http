@@ -1,0 +1,19 @@
+POST http://localhost:8001/user/signup
+Content-Type: application/json
+
+{
+  "email": "hi@hi.hi",
+  "password": "password",
+  "username": "mycoolusername"
+}
+
+###
+
+POST http://localhost:8001/user/reset-password
+Content-Type: application/json
+
+{
+  "email": "hi@hi.hi",
+  "old_password": "password",
+  "new_password": "password"
+}

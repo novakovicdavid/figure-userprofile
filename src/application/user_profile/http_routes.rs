@@ -34,6 +34,13 @@ struct SignInResponse {
     id: String,
 }
 
+#[derive(Deserialize)]
+pub struct ResetPasswordRequest {
+    pub email: String,
+    pub old_password: String,
+    pub new_password: String,
+}
+
 impl SignInResponse {
     pub fn new(id: String) -> Self {
         Self {
@@ -72,4 +79,12 @@ pub async fn sign_up<T: TransactionTrait>(State(server_state): State<Arc<ServerS
         }
         Err(e) => ApplicationError::from(e).into_response()
     };
+}
+
+pub async fn reset_password<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>,
+                                                 Json(reset): Json<ResetPasswordRequest>)
+                                                 -> impl IntoResponse {
+    server_state.user_service.reset_password(&reset.email, &reset.old_password, reset.new_password)
+        .await
+        .map_err(|e| ApplicationError::from(e).into_response())
 }
