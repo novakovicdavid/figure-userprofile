@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
 use error_conversion_macro::ErrorEnum;
-use figure_lib::middleware::correlation_id::get_correlation_id;
-use figure_lib::queue::events::CreateEvent;
 use figure_lib::rdbs::outbox_repository::{Outbox, OutboxError};
 use figure_lib::rdbs::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
 use thiserror::Error;
@@ -133,9 +131,7 @@ impl<T> UserProfileService<T> where T: TransactionTrait
 
         self.user_repository.update(Some(&mut transaction), &user).await?;
 
-        let correlation_id = get_correlation_id().unwrap();
-
-        self.outbox_repository.insert(&mut transaction, CreateEvent::new(correlation_id, Box::new(event))).await?;
+        self.outbox_repository.insert(&mut transaction, event.into()).await?;
 
         transaction.commit().await?;
 
