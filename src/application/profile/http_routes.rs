@@ -4,7 +4,6 @@ use axum::Extension;
 use axum::extract::{Multipart, Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use figure_lib::rdbs::transaction::TransactionTrait;
 
 use crate::application::ApplicationError;
 use crate::application::errors::RouteError;
@@ -13,7 +12,7 @@ use crate::infrastructure::session::SessionOption;
 use crate::infrastructure::to_json_string::to_json_string_with_name;
 use crate::state::ServerState;
 
-pub async fn get_profile<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, Path(profile_id): Path<String>) -> impl IntoResponse {
+pub async fn get_profile(State(server_state): State<Arc<ServerState>>, Path(profile_id): Path<String>) -> impl IntoResponse {
     server_state.profile_service
         .find_profile_by_id(profile_id)
         .await
@@ -22,7 +21,7 @@ pub async fn get_profile<T: TransactionTrait>(State(server_state): State<Arc<Ser
         .map_err(ApplicationError::from)
 }
 
-pub async fn get_total_profiles_count<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>) -> impl IntoResponse {
+pub async fn get_total_profiles_count(State(server_state): State<Arc<ServerState>>) -> impl IntoResponse {
     server_state.profile_service
         .get_total_profiles_count()
         .await
@@ -30,7 +29,7 @@ pub async fn get_total_profiles_count<T: TransactionTrait>(State(server_state): 
         .map_err(ApplicationError::from)
 }
 
-pub async fn update_profile<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, session: Extension<SessionOption>, multipart: Multipart) -> impl IntoResponse {
+pub async fn update_profile(State(server_state): State<Arc<ServerState>>, session: Extension<SessionOption>, multipart: Multipart) -> impl IntoResponse {
     // Check if logged in
     let session = match &session.session {
         Some(s) => s,

@@ -1,8 +1,7 @@
 use std::time::Instant;
 
 use figure_lib::rdbs::postgres::outbox::PostgresOutbox;
-use figure_lib::rdbs::postgres::transaction::PostgresTransactionManager;
-use figure_lib::rdbs::transaction::TransactionTrait;
+use figure_lib::rdbs::postgres::transaction::postgres_transaction::{TransactionBackend, TransactionManager};
 use sqlx::{Pool, Postgres};
 use tokio::task;
 use tracing::log::info;
@@ -16,15 +15,15 @@ use crate::infrastructure::postgres::repositories::profile_repository::ProfileRe
 use crate::infrastructure::postgres::repositories::user_repository::UserRepository;
 use crate::infrastructure::secure_hasher::Argon2Hasher;
 
-pub struct ServerState<T> {
-    pub user_service: UserProfileService<T>,
-    pub profile_service: ProfileService<T>,
+pub struct ServerState {
+    pub user_service: UserProfileService,
+    pub profile_service: ProfileService,
 
     pub domain: String,
 }
 
-impl<T: TransactionTrait> ServerState<T> {
-    pub fn new(user_service: UserProfileService<T>, profile_service: ProfileService<T>, domain: String) -> Self {
+impl ServerState {
+    pub fn new(user_service: UserProfileService, profile_service: ProfileService, domain: String) -> Self {
         Self {
             user_service,
             profile_service,
@@ -33,7 +32,7 @@ impl<T: TransactionTrait> ServerState<T> {
     }
 }
 
-pub async fn create_state(env: &Environment) -> Result<ServerState<impl TransactionTrait>, anyhow::Error> {
+pub async fn create_state(env: &Environment) -> Result<ServerState, anyhow::Error> {
     info!("Connecting to database...");
     let database_url = env.database_url.clone();
 
@@ -66,7 +65,7 @@ pub async fn create_state(env: &Environment) -> Result<ServerState<impl Transact
     let auth_connector = auth_connector_future.await??;
 
     // Initialize repositories
-    let transaction_starter = PostgresTransactionManager::new(db_pool.clone());
+    let transaction_starter = TransactionManager::new(TransactionBackend::SqlxPostgres(db_pool.clone()));
     let user_repository = UserRepository::new(db_pool.clone());
     let profile_repository = ProfileRepository::new(db_pool.clone());
     let outbox_repository = PostgresOutbox::new();
@@ -76,7 +75,7 @@ pub async fn create_state(env: &Environment) -> Result<ServerState<impl Transact
 
     // Initialize services
     let user_profile_service = UserProfileService::new(
-        Box::new(transaction_starter.clone()), Box::new(user_repository.clone()),
+        transaction_starter.clone(), Box::new(user_repository.clone()),
         Box::new(profile_repository.clone()),
         Box::new(outbox_repository),
         Box::new(secure_hasher),

@@ -4,7 +4,6 @@ use axum::{middleware, Router};
 use axum::routing::get;
 use figure_lib::middleware::correlation_id::CorrelationLayer;
 use figure_lib::middleware::tracing::http_tracing_layer;
-use figure_lib::rdbs::transaction::TransactionTrait;
 use http::header::{ACCEPT, CONTENT_TYPE};
 use http::Method;
 use tower_cookies::CookieManagerLayer;
@@ -16,7 +15,7 @@ use crate::infrastructure::http::middleware::session_layer::session_extension;
 use crate::infrastructure::http::misc_routes::healthcheck;
 use crate::state::ServerState;
 
-pub fn create_router<T: TransactionTrait>(server_state: Arc<ServerState<T>>, cors: &String) -> Result<Router, anyhow::Error> {
+pub fn create_router(server_state: Arc<ServerState>, cors: &String) -> Result<Router, anyhow::Error> {
     let cors_layer = create_cors_layer([cors.parse()?]);
 
     let router = Router::new()

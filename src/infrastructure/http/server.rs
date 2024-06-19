@@ -2,14 +2,13 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
 
-use figure_lib::rdbs::transaction::TransactionTrait;
 use tracing::log::info;
 
 use crate::environment::Environment;
 use crate::infrastructure::http::router::create_router;
 use crate::state::ServerState;
 
-pub async fn start_server<T: TransactionTrait>(env: &Environment, state: Arc<ServerState<T>>) -> Result<(), anyhow::Error> {
+pub async fn start_server(env: &Environment, state: Arc<ServerState>) -> Result<(), anyhow::Error> {
     let time_to_start = Instant::now();
 
     info!("Allowed origin (CORS): {}", env.origin);

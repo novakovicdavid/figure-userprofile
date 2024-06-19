@@ -5,7 +5,6 @@ use axum::extract::State;
 use axum::response::{IntoResponse, Response};
 use cookie::{Cookie, SameSite};
 use derive_name::with_name;
-use figure_lib::rdbs::transaction::TransactionTrait;
 use serde::Deserialize;
 use serde::Serialize;
 use tower_cookies::Cookies;
@@ -49,7 +48,7 @@ impl SignInResponse {
     }
 }
 
-pub async fn sign_in<T: TransactionTrait>(Extension(_session_option): Extension<SessionOption>, State(server_state): State<Arc<ServerState<T>>>, cookies: Cookies, Json(signin): Json<SignInForm>) -> impl IntoResponse {
+pub async fn sign_in(Extension(_session_option): Extension<SessionOption>, State(server_state): State<Arc<ServerState>>, cookies: Cookies, Json(signin): Json<SignInForm>) -> impl IntoResponse {
     return match server_state.user_service.sign_in(&signin.email, &signin.password).await {
         Ok((profile_id, session_id)) => {
             let mut cookie = Cookie::new("session_id", session_id);
@@ -65,7 +64,7 @@ pub async fn sign_in<T: TransactionTrait>(Extension(_session_option): Extension<
     };
 }
 
-pub async fn sign_up<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>, cookies: Cookies, Json(signup): Json<SignUpForm>) -> Response {
+pub async fn sign_up(State(server_state): State<Arc<ServerState>>, cookies: Cookies, Json(signup): Json<SignUpForm>) -> Response {
     return match server_state.user_service.sign_up(&signup.email, &signup.password, &signup.username).await {
         Ok((profile_id, session)) => {
             let mut cookie = Cookie::new("session_id", session);
@@ -81,7 +80,7 @@ pub async fn sign_up<T: TransactionTrait>(State(server_state): State<Arc<ServerS
     };
 }
 
-pub async fn reset_password<T: TransactionTrait>(State(server_state): State<Arc<ServerState<T>>>,
+pub async fn reset_password(State(server_state): State<Arc<ServerState>>,
                                                  Json(reset): Json<ResetPasswordRequest>)
                                                  -> impl IntoResponse {
     server_state.user_service.reset_password(&reset.email, &reset.old_password, reset.new_password)

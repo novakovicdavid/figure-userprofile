@@ -1,8 +1,7 @@
-use std::marker::PhantomData;
-
 use error_conversion_macro::ErrorEnum;
 use figure_lib::rdbs::outbox_repository::{Outbox, OutboxError};
-use figure_lib::rdbs::transaction::{TransactionError, TransactionManagerTrait, TransactionTrait};
+use figure_lib::rdbs::postgres::transaction::postgres_transaction::TransactionManager;
+use figure_lib::rdbs::transaction::TransactionError;
 use thiserror::Error;
 use tracing::log::error;
 use uuid::Uuid;
@@ -16,12 +15,11 @@ use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
 use crate::infrastructure::secure_hasher::{SecureHasher, SecureHasherError};
 
-pub struct UserProfileService<T> {
-    transaction_creator: Box<dyn TransactionManagerTrait<T>>,
-    marker: PhantomData<T>,
-    user_repository: Box<dyn UserRepositoryTrait<T>>,
-    profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
-    outbox_repository: Box<dyn Outbox<T>>,
+pub struct UserProfileService {
+    transaction_creator: TransactionManager,
+    user_repository: Box<dyn UserRepositoryTrait>,
+    profile_repository: Box<dyn ProfileRepositoryTrait>,
+    outbox_repository: Box<dyn Outbox>,
     secure_hasher: Box<dyn SecureHasher>,
     auth_connector: Box<dyn AuthConnector>,
 }
@@ -54,12 +52,11 @@ pub enum UserProfileServiceError {
     UnexpectedError(anyhow::Error),
 }
 
-impl<T> UserProfileService<T> where T: TransactionTrait
-{
-    pub fn new(transaction_creator: Box<dyn TransactionManagerTrait<T>>,
-               user_repository: Box<dyn UserRepositoryTrait<T>>,
-               profile_repository: Box<dyn ProfileRepositoryTrait<T>>,
-               outbox_repository: Box<dyn Outbox<T>>,
+impl UserProfileService {
+    pub fn new(transaction_creator: TransactionManager,
+               user_repository: Box<dyn UserRepositoryTrait>,
+               profile_repository: Box<dyn ProfileRepositoryTrait>,
+               outbox_repository: Box<dyn Outbox>,
                secure_hasher: Box<dyn SecureHasher>,
                auth_connector: Box<dyn AuthConnector>) -> Self {
         UserProfileService {
@@ -68,7 +65,6 @@ impl<T> UserProfileService<T> where T: TransactionTrait
             transaction_creator,
             secure_hasher,
             auth_connector,
-            marker: PhantomData::default(),
             outbox_repository,
         }
     }
@@ -78,21 +74,23 @@ impl<T> UserProfileService<T> where T: TransactionTrait
         User::validate_password(password)?;
 
 
-        if self.user_repository.find_one_by_email(None, email).await.is_ok() {
+        if self.user_repository.find_one_by_email(email).await.is_ok() {
             return Err(UserProfileServiceError::EmailAlreadyInUse);
         }
 
         let password_hash = self.secure_hasher.hash_password(password)?;
 
-        let mut transaction = self.transaction_creator.create().await?;
+        let result: Result<(User, Profile), UserProfileServiceError> = self.transaction_creator.transaction(|| async move {
+            let user = User::register(Uuid::new_v4().to_string(), email.to_string(), password_hash, "user".to_string())?;
+            self.user_repository.insert(&user).await?;
 
-        let user = User::register(Uuid::new_v4().to_string(), email.to_string(), password_hash, "user".to_string())?;
-        self.user_repository.insert(Some(&mut transaction), &user).await?;
+            let profile = Profile::new(Uuid::new_v4().to_string(), username.to_string(), None, None, None, None, user.get_id())?;
+            self.profile_repository.create(&profile).await?;
 
-        let profile = Profile::new(Uuid::new_v4().to_string(), username.to_string(), None, None, None, None, user.get_id())?;
-        self.profile_repository.create(Some(&mut transaction), &profile).await?;
+            Ok((user, profile))
+        }).await?;
 
-        transaction.commit().await?;
+        let (user, profile) = result.unwrap();
 
         let session_id = self.auth_connector
             .create_session(user.get_id(), profile.get_id())
@@ -105,11 +103,11 @@ impl<T> UserProfileService<T> where T: TransactionTrait
         User::validate_email(email)?;
         User::validate_password(password)?;
 
-        let user = self.user_repository.find_one_by_email(None, email).await?;
+        let user = self.user_repository.find_one_by_email(email).await?;
 
         self.secure_hasher.verify_password(password, user.get_password())?;
 
-        let profile = self.profile_repository.find_by_user_id(None, user.get_id()).await?;
+        let profile = self.profile_repository.find_by_user_id(user.get_id()).await?;
 
         let session_id = self.auth_connector
             .create_session(user.get_id(), profile.get_id())
@@ -121,19 +119,17 @@ impl<T> UserProfileService<T> where T: TransactionTrait
     pub async fn reset_password(&self, email: &str, old_password: &str, new_password: String) -> Result<(), UserProfileServiceError> {
         User::validate_password(&new_password)?;
 
-        let mut user = self.user_repository.find_one_by_email(None, email).await?;
+        let mut user = self.user_repository.find_one_by_email(email).await?;
 
         self.secure_hasher.verify_password(old_password, user.get_password())?;
 
         let event = user.set_password(new_password, &self.secure_hasher)?;
 
-        let mut transaction = self.transaction_creator.create().await?;
-
-        self.user_repository.update(Some(&mut transaction), &user).await?;
-
-        self.outbox_repository.insert(&mut transaction, event.into()).await?;
-
-        transaction.commit().await?;
+        self.transaction_creator.transaction(|| async {
+            self.user_repository.update(&user).await?;
+            self.outbox_repository.insert(event.into()).await?;
+            Ok::<(), UserProfileServiceError>(())
+        }).await??;
 
         Ok(())
     }

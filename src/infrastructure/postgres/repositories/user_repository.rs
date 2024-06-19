@@ -1,6 +1,5 @@
 use async_trait::async_trait;
-use figure_lib::rdbs::postgres::transaction::PostgresTransaction;
-use figure_lib::rdbs::transaction::TransactionTrait;
+use figure_lib::rdbs::postgres::transaction::postgres_transaction::get_current_transaction;
 use sqlx::{Error, FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
 
@@ -22,8 +21,8 @@ impl UserRepository {
 }
 
 #[async_trait]
-impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
-    async fn insert(&self, transaction: Option<&mut PostgresTransaction>, user: &User) -> Result<(), RepositoryError> {
+impl UserRepositoryTrait for UserRepository {
+    async fn insert(&self, user: &User) -> Result<(), RepositoryError> {
         let query_string = r#"
         INSERT INTO "user" (id, email, password, role)
         VALUES ($1, $2, $3, 'user')
@@ -34,8 +33,10 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
             .bind(user.get_email())
             .bind(user.get_password());
 
+        let transaction = get_current_transaction();
+
         let query_result = match transaction {
-            Some(transaction) => query.execute(transaction.inner()).await,
+            Some(transaction) => query.execute(&mut **transaction.lock().await).await,
             None => query.execute(&self.db).await
         };
 
@@ -54,7 +55,7 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
             })
     }
 
-    async fn find_one_by_email(&self, transaction: Option<&mut PostgresTransaction>, email: &str) -> Result<User, RepositoryError> {
+    async fn find_one_by_email(&self, email: &str) -> Result<User, RepositoryError> {
         let query_string = r#"
         SELECT id, email, password, role
         FROM "user"
@@ -65,8 +66,10 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
             sqlx::query_as::<_, User>(&query_string)
                 .bind(email);
 
+        let transaction = get_current_transaction();
+
         let query_result = match transaction {
-            Some(transaction) => query.fetch_one(transaction.inner()).await,
+            Some(transaction) => query.fetch_one(&mut **transaction.lock().await).await,
             None => query.fetch_one(&self.db).await
         };
 
@@ -78,7 +81,7 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
         })
     }
 
-    async fn find_by_id(&self, transaction: Option<&mut PostgresTransaction>, id: i64) -> Result<User, RepositoryError> {
+    async fn find_by_id(&self, id: i64) -> Result<User, RepositoryError> {
         let query_string = r#"
         SELECT id, email, password, role
         FROM "user"
@@ -89,8 +92,10 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
             sqlx::query_as::<_, User>(&query_string)
                 .bind(id);
 
+        let transaction = get_current_transaction();
+
         let query_result = match transaction {
-            Some(transaction) => query.fetch_one(transaction.inner()).await,
+            Some(transaction) => query.fetch_one(&mut **transaction.lock().await).await,
             None => query.fetch_one(&self.db).await
         };
 
@@ -102,7 +107,7 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
         })
     }
 
-    async fn update(&self, transaction: Option<&mut PostgresTransaction>, user: &User) -> Result<(), RepositoryError> {
+    async fn update(&self, user: &User) -> Result<(), RepositoryError> {
         let query_string = r#"
         UPDATE "user"
         SET email = $1, password = $2, role = $3
@@ -115,8 +120,10 @@ impl UserRepositoryTrait<PostgresTransaction> for UserRepository {
             .bind(user.get_role())
             .bind(user.get_id());
 
+        let transaction = get_current_transaction();
+
         let result = match transaction {
-            Some(transaction) => query.execute(transaction.inner()).await,
+            Some(transaction) => query.execute(&mut **transaction.lock().await).await,
             None => query.execute(&self.db).await
         };
 
