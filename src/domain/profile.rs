@@ -6,6 +6,7 @@ pub mod profile {
     use regex::Regex;
     use thiserror::Error;
     use unicode_segmentation::UnicodeSegmentation;
+    use uuid::Uuid;
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct Profile {
@@ -30,10 +31,20 @@ pub mod profile {
     }
 
     impl Profile {
-        pub fn new(id: String, username: String, display_name: Option<String>, bio: Option<String>, banner: Option<String>, profile_picture: Option<String>, user_id: String) -> Result<Self, ProfileDomainError> {
+        pub fn register(username: String, user_id: String) -> Result<Self, ProfileDomainError> {
             Self::validate_username(&username)?;
 
-            Ok(Self::new_raw(id, username, display_name, bio, banner, profile_picture, user_id))
+            let id = Uuid::new_v4().to_string();
+
+            Ok(Self {
+                id,
+                username,
+                display_name: None,
+                bio: None,
+                banner: None,
+                profile_picture: None,
+                user_id,
+            })
         }
 
         pub fn new_raw(id: String, username: String, display_name: Option<String>, bio: Option<String>, banner: Option<String>, profile_picture: Option<String>, user_id: String) -> Self {

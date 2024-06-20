@@ -4,12 +4,16 @@ pub use user::UserDomainError;
 pub mod user {
     use std::time::SystemTime;
 
+    use error_conversion_macro::ErrorEnum;
     use figure_lib::queue::events::user::PasswordChangedEvent;
     use lazy_static::lazy_static;
     use regex::Regex;
     use thiserror::Error;
     use unicode_segmentation::UnicodeSegmentation;
+    use uuid::Uuid;
 
+    use crate::domain::Profile;
+    use crate::domain::profile::ProfileDomainError;
     use crate::infrastructure::secure_hasher::SecureHasher;
 
     #[derive(Debug, Clone, PartialEq)]
@@ -20,10 +24,13 @@ pub mod user {
         role: String,
     }
 
-    #[derive(Debug, Error)]
+    #[derive(Debug, Error, ErrorEnum)]
     pub enum UserDomainError {
         #[error(transparent)]
         UnexpectedError(anyhow::Error),
+        #[error(transparent)]
+        #[without_anyhow]
+        ProfileDomainError(ProfileDomainError),
         #[error("invalid-email")]
         InvalidEmail,
         #[error("password-too-short")]
@@ -38,11 +45,22 @@ pub mod user {
     }
 
     impl User {
-        pub fn register(id: String, email: String, password: String, role: String) -> Result<Self, UserDomainError> {
+        pub fn register(email: String, password: String, username: String) -> Result<(Self, Profile), UserDomainError> {
             Self::validate_email(&email)?;
             Self::validate_password(&password)?;
 
-            Ok(Self::new_unchecked(id, email, password, role))
+            let id = Uuid::new_v4().to_string();
+
+            let user = Self {
+                id: id.to_string(),
+                email,
+                password,
+                role: "user".to_string(),
+            };
+
+            let profile = Profile::register(username, id)?;
+
+            Ok((user, profile))
         }
 
         pub fn new_unchecked(id: String, email: String, password: String, role: String) -> Self {

@@ -55,6 +55,7 @@ impl IntoHttpStatusCode for UserDomainError {
             UserDomainError::InvalidEmail => 400,
             UserDomainError::PasswordTooShort => 400,
             UserDomainError::PasswordTooLong => 400,
+            UserDomainError::ProfileDomainError(e) => e.status_code()
         }
     }
 }

@@ -4,7 +4,6 @@ use figure_lib::rdbs::postgres::transaction::postgres_transaction::TransactionMa
 use figure_lib::rdbs::transaction::TransactionError;
 use thiserror::Error;
 use tracing::log::error;
-use uuid::Uuid;
 
 use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 use crate::application::errors::RepositoryError;
@@ -81,10 +80,8 @@ impl UserProfileService {
         let password_hash = self.secure_hasher.hash_password(password)?;
 
         let result: Result<(User, Profile), UserProfileServiceError> = self.transaction_creator.transaction(|| async move {
-            let user = User::register(Uuid::new_v4().to_string(), email.to_string(), password_hash, "user".to_string())?;
+            let (user, profile) = User::register(email.to_string(), password_hash, username.to_string())?;
             self.user_repository.insert(&user).await?;
-
-            let profile = Profile::new(Uuid::new_v4().to_string(), username.to_string(), None, None, None, None, user.get_id())?;
             self.profile_repository.create(&profile).await?;
 
             Ok((user, profile))
