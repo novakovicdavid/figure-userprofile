@@ -1,2 +1,2 @@
 pub mod repositories;
-mod deserializers;
+mod entities;

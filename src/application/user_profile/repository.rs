@@ -8,5 +8,5 @@ pub trait UserRepositoryTrait: Send + Sync {
     async fn insert(&self, user: &User) -> Result<(), RepositoryError>;
     async fn find_one_by_email(&self, email: &str) -> Result<User, RepositoryError>;
     async fn find_by_id(&self, id: i64) -> Result<User, RepositoryError>;
-    async fn update(&self, user: &User) -> Result<(), RepositoryError>;
+    async fn set_password(&self, user: &User) -> Result<(), RepositoryError>;
 }

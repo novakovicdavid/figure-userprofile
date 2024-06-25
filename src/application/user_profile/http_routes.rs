@@ -65,7 +65,7 @@ pub async fn sign_in(Extension(_session_option): Extension<SessionOption>, State
 }
 
 pub async fn sign_up(State(server_state): State<Arc<ServerState>>, cookies: Cookies, Json(signup): Json<SignUpForm>) -> Response {
-    return match server_state.user_service.sign_up(&signup.email, &signup.password, &signup.username).await {
+    return match server_state.user_service.sign_up(signup.email, signup.password, signup.username).await {
         Ok((profile_id, session)) => {
             let mut cookie = Cookie::new("session_id", session);
             cookie.set_http_only(true);

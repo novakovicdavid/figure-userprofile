@@ -10,13 +10,13 @@ pub mod profile {
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct Profile {
-        id: String,
-        username: String,
-        display_name: Option<String>,
-        bio: Option<String>,
-        banner: Option<String>,
-        profile_picture: Option<String>,
-        user_id: String,
+        pub id: String,
+        pub username: String,
+        pub display_name: Option<String>,
+        pub bio: Option<String>,
+        pub banner: Option<String>,
+        pub profile_picture: Option<String>,
+        pub user_id: String,
     }
 
     #[derive(Debug, Error)]
@@ -32,7 +32,7 @@ pub mod profile {
 
     impl Profile {
         pub fn register(username: String, user_id: String) -> Result<Self, ProfileDomainError> {
-            Self::validate_username(&username)?;
+            // Self::validate_username(&username)?;
 
             let id = Uuid::new_v4().to_string();
 
@@ -45,18 +45,6 @@ pub mod profile {
                 profile_picture: None,
                 user_id,
             })
-        }
-
-        pub fn new_raw(id: String, username: String, display_name: Option<String>, bio: Option<String>, banner: Option<String>, profile_picture: Option<String>, user_id: String) -> Self {
-            Self {
-                id,
-                username,
-                display_name,
-                bio,
-                banner,
-                profile_picture,
-                user_id,
-            }
         }
 
         // Valid username test

@@ -12,7 +12,6 @@ use crate::application::profile::service::ProfileServiceError;
 use crate::application::user_profile::service::UserProfileServiceError;
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
-use crate::infrastructure::secure_hasher::SecureHasherError;
 
 #[derive(Serialize)]
 pub struct ErrorResponse<'a> {
@@ -55,7 +54,8 @@ impl IntoHttpStatusCode for UserDomainError {
             UserDomainError::InvalidEmail => 400,
             UserDomainError::PasswordTooShort => 400,
             UserDomainError::PasswordTooLong => 400,
-            UserDomainError::ProfileDomainError(e) => e.status_code()
+            UserDomainError::PasswordWrong => 400,
+            UserDomainError::ProfileDomainError(e) => e.status_code(),
         }
     }
 }
@@ -78,7 +78,6 @@ impl IntoHttpStatusCode for UserProfileServiceError {
             UserProfileServiceError::OutboxError(e) => e.status_code(),
             UserProfileServiceError::RepositoryError(e) => e.status_code(),
             UserProfileServiceError::TransactionError(e) => e.status_code(),
-            UserProfileServiceError::SecureHasherError(e) => e.status_code(),
             UserProfileServiceError::AuthConnectorError(e) => e.status_code(),
         }
     }
@@ -89,15 +88,6 @@ impl IntoHttpStatusCode for ProfileServiceError {
         match self {
             ProfileServiceError::UnexpectedError(_) => unreachable!(),
             ProfileServiceError::RepositoryError(e) => e.status_code()
-        }
-    }
-}
-
-impl IntoHttpStatusCode for SecureHasherError {
-    fn status_code(&self) -> u16 {
-        match self {
-            SecureHasherError::UnexpectedError(_) => unreachable!(),
-            SecureHasherError::WrongPassword => 401
         }
     }
 }

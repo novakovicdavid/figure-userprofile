@@ -9,11 +9,21 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:8001/user/reset-password
+POST http://localhost:8001/user/reset-password HTTP/2
 Content-Type: application/json
 
 {
   "email": "hi@hi.hi",
   "old_password": "password",
-  "new_password": "password"
+  "new_password": "password2"
+}
+
+###
+
+POST http://localhost:8001/user/signin HTTP/2
+Content-Type: application/json
+
+{
+  "email": "hi@hi.hi",
+  "password": "password2"
 }
