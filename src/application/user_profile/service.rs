@@ -9,8 +9,8 @@ use crate::application::connectors::auth_connector::{AuthConnector, AuthConnecto
 use crate::application::errors::RepositoryError;
 use crate::application::profile::repository::ProfileRepositoryTrait;
 use crate::application::user_profile::repository::UserRepositoryTrait;
+use crate::domain::{Profile, User};
 use crate::domain::profile::ProfileDomainError;
-use crate::domain::User;
 use crate::domain::user::UserDomainError;
 
 pub struct UserProfileService {
@@ -64,6 +64,7 @@ impl UserProfileService {
     pub async fn sign_up(&self, email: String, password: String, username: String) -> Result<(String, String), UserProfileServiceError> {
         User::validate_email(&email)?;
         User::validate_password(&password)?;
+        Profile::validate_username(&username)?;
 
         if self.user_repository.find_one_by_email(&email).await.is_ok() {
             return Err(UserProfileServiceError::EmailAlreadyInUse);

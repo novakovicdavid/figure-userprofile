@@ -32,7 +32,7 @@ pub mod profile {
 
     impl Profile {
         pub fn register(username: String, user_id: String) -> Result<Self, ProfileDomainError> {
-            // Self::validate_username(&username)?;
+            Self::validate_username(&username)?;
 
             let id = Uuid::new_v4().to_string();
 
