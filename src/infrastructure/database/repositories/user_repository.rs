@@ -9,7 +9,7 @@ mod user_repository {
     use crate::application::errors::RepositoryError;
     use crate::application::user_profile::repository::UserRepositoryTrait;
     use crate::domain::User;
-    use crate::infrastructure::postgres::entities::UserEntity;
+    use crate::infrastructure::database::entities::UserEntity;
 
     pub struct PostgresTokioUserRepository {
         pool: Pool,

@@ -10,7 +10,7 @@ mod profile_repository {
     use crate::application::errors::RepositoryError;
     use crate::application::profile::repository::ProfileRepositoryTrait;
     use crate::domain::Profile;
-    use crate::infrastructure::postgres::entities::ProfileEntity;
+    use crate::infrastructure::database::entities::ProfileEntity;
 
     #[derive(Clone)]
     pub struct PostgresProfileRepository {

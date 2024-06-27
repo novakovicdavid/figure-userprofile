@@ -6,5 +6,5 @@ pub mod secure_hasher;
 pub mod logging;
 pub mod http;
 mod grpc;
-pub mod postgres;
+pub mod database;
 
