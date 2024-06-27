@@ -8,7 +8,6 @@ pub mod profile {
     use unicode_segmentation::UnicodeSegmentation;
     use uuid::Uuid;
 
-    #[derive(Debug, Clone, PartialEq)]
     pub struct Profile {
         pub id: String,
         pub username: String,

@@ -19,7 +19,6 @@ pub mod user {
     use crate::domain::profile::ProfileDomainError;
     use crate::infrastructure::secure_hasher::ARGON2_HASHER;
 
-    #[derive(Debug, Clone, PartialEq)]
     pub struct User {
         pub id: String,
         pub email: String,
