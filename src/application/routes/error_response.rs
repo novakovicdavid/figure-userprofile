@@ -8,8 +8,8 @@ use tracing::log::error;
 use crate::application::ApplicationError;
 use crate::application::connectors::auth_connector::AuthConnectorError;
 use crate::application::errors::{RepositoryError, RouteError};
-use crate::application::profile::service::ProfileServiceError;
-use crate::application::user_profile::service::UserProfileServiceError;
+use crate::application::services::profile_service::ProfileServiceError;
+use crate::application::services::user_service::UserProfileServiceError;
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
 

@@ -8,8 +8,8 @@ use tokio_postgres::NoTls;
 use tracing::log::info;
 use url::Url;
 
-use crate::application::profile::service::ProfileService;
-use crate::application::user_profile::service::UserProfileService;
+use crate::application::services::profile_service::ProfileService;
+use crate::application::services::user_service::UserProfileService;
 use crate::environment::Environment;
 use crate::infrastructure::database::repositories::profile_repository::PostgresProfileRepository;
 use crate::infrastructure::database::repositories::user_repository::PostgresTokioUserRepository;

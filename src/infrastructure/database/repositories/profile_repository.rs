@@ -8,7 +8,7 @@ mod profile_repository {
     use tokio_postgres::types::ToSql;
 
     use crate::application::errors::RepositoryError;
-    use crate::application::profile::repository::ProfileRepositoryTrait;
+    use crate::application::repository_traits::profile_repository::ProfileRepositoryTrait;
     use crate::domain::Profile;
     use crate::infrastructure::database::entities::ProfileEntity;
 

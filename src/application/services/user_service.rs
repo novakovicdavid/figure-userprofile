@@ -7,8 +7,8 @@ use tracing::log::error;
 
 use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 use crate::application::errors::RepositoryError;
-use crate::application::profile::repository::ProfileRepositoryTrait;
-use crate::application::user_profile::repository::UserRepositoryTrait;
+use crate::application::repository_traits::profile_repository::ProfileRepositoryTrait;
+use crate::application::repository_traits::user_repository::UserRepositoryTrait;
 use crate::domain::{Profile, User};
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;

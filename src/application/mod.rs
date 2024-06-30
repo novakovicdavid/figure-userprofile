@@ -1,8 +1,9 @@
 pub use application_error::ApplicationError;
 
-pub mod user_profile;
-pub mod profile;
 pub mod connectors;
-pub mod http;
 mod application_error;
 pub mod errors;
+pub mod services;
+pub mod repository_traits;
+pub mod routes;
+mod miscellaneous;

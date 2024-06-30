@@ -9,8 +9,8 @@ use http::Method;
 use tower_cookies::CookieManagerLayer;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
-use crate::application::profile::http_router::profile_router;
-use crate::application::user_profile::http_router::user_router;
+use crate::application::routes::profile_routes::profile_router;
+use crate::application::routes::user_routes::user_router;
 use crate::infrastructure::http::middleware::session_layer::session_extension;
 use crate::infrastructure::http::misc_routes::healthcheck;
 use crate::state::ServerState;

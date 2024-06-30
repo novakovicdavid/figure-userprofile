@@ -7,7 +7,7 @@ mod user_repository {
     use tokio_postgres::GenericClient;
 
     use crate::application::errors::RepositoryError;
-    use crate::application::user_profile::repository::UserRepositoryTrait;
+    use crate::application::repository_traits::user_repository::UserRepositoryTrait;
     use crate::domain::User;
     use crate::infrastructure::database::entities::UserEntity;
 

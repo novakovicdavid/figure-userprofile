@@ -1,24 +1,52 @@
 use std::sync::Arc;
 
-use axum::Extension;
+use axum::{Extension, Router};
 use axum::extract::{Multipart, Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use axum::routing::{get, post};
+use serde::Serialize;
+use tower_http::limit::RequestBodyLimitLayer;
 
 use crate::application::ApplicationError;
 use crate::application::errors::RouteError;
-use crate::application::profile::dtos::ProfileWithoutUserIdDTO;
+use crate::application::miscellaneous::ToJsonString;
 use crate::infrastructure::session::SessionOption;
-use crate::infrastructure::to_json_string::to_json_string_with_name;
 use crate::state::ServerState;
+
+pub fn profile_router() -> Router<Arc<ServerState>> {
+    Router::new()
+        .route("/profile/update", post(update_profile)
+            // Set a different limit
+            .layer(RequestBodyLimitLayer::new(5 * 1_000_000)))
+
+        .route("/profiles/:id", get(get_profile))
+        .route("/profiles/count", get(get_total_profiles_count))
+}
+
+#[derive(Serialize, Debug)]
+pub struct GetProfileResponseDTO {
+    pub id: String,
+    pub username: String,
+    pub display_name: Option<String>,
+    pub bio: Option<String>,
+    pub banner: Option<String>,
+    pub profile_picture: Option<String>,
+}
 
 pub async fn get_profile(State(server_state): State<Arc<ServerState>>, Path(profile_id): Path<String>) -> impl IntoResponse {
     server_state.profile_service
-        .find_profile_by_id(profile_id)
-        .await
-        .and_then(|profile| Ok(ProfileWithoutUserIdDTO::from(profile)))
-        .map(to_json_string_with_name)
+        .find_profile_by_id(profile_id).await
+        .map(|profile| GetProfileResponseDTO {
+            id: profile.id,
+            username: profile.username,
+            display_name: profile.display_name,
+            bio: profile.bio,
+            banner: profile.banner,
+            profile_picture: profile.profile_picture,
+        })
         .map_err(ApplicationError::from)
+        .and_then(|dto| dto.to_json_string())
 }
 
 pub async fn get_total_profiles_count(State(server_state): State<Arc<ServerState>>) -> impl IntoResponse {

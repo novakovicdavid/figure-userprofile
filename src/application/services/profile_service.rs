@@ -2,7 +2,7 @@ use error_conversion_macro::ErrorEnum;
 use thiserror::Error;
 
 use crate::application::errors::RepositoryError;
-use crate::application::profile::repository::ProfileRepositoryTrait;
+use crate::application::repository_traits::profile_repository::ProfileRepositoryTrait;
 use crate::domain::Profile;
 
 pub struct ProfileService {
