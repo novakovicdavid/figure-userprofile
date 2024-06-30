@@ -15,7 +15,7 @@ mod auth_connector {
     use auth_client::AuthClient;
 
     use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
-    use crate::infrastructure::grpc::auth_connector::CorrelationIdInterceptor;
+    use crate::infrastructure::connectors::auth_connector::CorrelationIdInterceptor;
 
     tonic::include_proto!("auth");
 
