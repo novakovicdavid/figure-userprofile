@@ -44,6 +44,8 @@ prost = "0.12.3"
 redis = { version = "0.24.0", features = ["tokio-comp", "tokio-rustls-comp", "connection-manager"] }
 tokio-postgres = "0.7.10"
 deadpool-postgres = "0.14.0"
+refinery = { version = "0.8.14", features = ["tokio-postgres"] }
+barrel = { version = "0.7.0", features = ["pg"] }
 
 # Security
 argon2 = { version = "0.5.3", features = ["std"] }

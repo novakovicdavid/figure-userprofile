@@ -8,14 +8,17 @@ use tokio_postgres::NoTls;
 use tracing::log::info;
 use url::Url;
 
+use crate::application::migration_runner_trait::MigrationRunner;
 use crate::application::services::profile_service::ProfileService;
 use crate::application::services::user_service::UserProfileService;
 use crate::environment::Environment;
 use crate::infrastructure::database::repositories::profile_repository::PostgresProfileRepository;
 use crate::infrastructure::database::repositories::user_repository::PostgresTokioUserRepository;
+use crate::infrastructure::database::TokioPostgresMigrationRunner;
 use crate::infrastructure::GrpcAuthConnector;
 
 pub struct ServerState {
+    pub migration_runner: Box<dyn MigrationRunner>,
     pub user_service: UserProfileService,
     pub profile_service: ProfileService,
 
@@ -23,8 +26,12 @@ pub struct ServerState {
 }
 
 impl ServerState {
-    pub fn new(user_service: UserProfileService, profile_service: ProfileService, domain: String) -> Self {
+    pub fn new(migration_runner: Box<dyn MigrationRunner>,
+               user_service: UserProfileService,
+               profile_service: ProfileService,
+               domain: String) -> Self {
         Self {
+            migration_runner,
             user_service,
             profile_service,
             domain,
@@ -68,6 +75,7 @@ pub async fn create_state(env: &Environment) -> Result<ServerState, anyhow::Erro
     let auth_connector = auth_connector_future.await??;
 
     // Initialize repositories
+    let migration_runner = Box::new(TokioPostgresMigrationRunner::new(db_pool.clone()));
     let transaction_starter = TransactionManager::new(TransactionBackend::PostgresTokio(db_pool.clone()));
     let user_repository = PostgresTokioUserRepository::new(db_pool.clone());
     let profile_repository = PostgresProfileRepository::new(db_pool);
@@ -83,5 +91,5 @@ pub async fn create_state(env: &Environment) -> Result<ServerState, anyhow::Erro
     let profile_service = ProfileService::new(Box::new(profile_repository));
 
     // Resulting state
-    Ok(ServerState::new(user_profile_service, profile_service, domain))
+    Ok(ServerState::new(migration_runner, user_profile_service, profile_service, domain))
 }

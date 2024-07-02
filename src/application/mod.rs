@@ -7,3 +7,4 @@ pub mod services;
 pub mod repository_traits;
 pub mod routes;
 mod miscellaneous;
+pub mod migration_runner_trait;

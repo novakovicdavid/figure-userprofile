@@ -9,7 +9,7 @@ mod domain;
 mod infrastructure;
 mod application;
 mod environment;
-pub mod state;
+mod state;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<(), anyhow::Error> {
@@ -18,6 +18,8 @@ async fn main() -> anyhow::Result<(), anyhow::Error> {
     let environment = Environment::new()?;
 
     let state = Arc::new(create_state(&environment).await?);
+
+    state.migration_runner.run().await?;
 
     start_server(&environment, state.clone()).await
 }
