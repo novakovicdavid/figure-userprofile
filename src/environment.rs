@@ -16,10 +16,6 @@ pub struct Environment {
 
     pub auth_host: String,
     pub auth_port: u16,
-
-    // Loki logging server url & name of running figure-backend instance
-    pub loki_host: Option<String>,
-    pub loki_url: Option<String>,
 }
 
 impl Environment {
@@ -28,8 +24,6 @@ impl Environment {
             Self {
                 database_url: get_var("DATABASE_URL").expect("No DATABASE_URL env found"),
                 origin: get_var("ORIGIN").expect("No ORIGIN env found"),
-                loki_host: get_var("LOKI_HOST").ok(),
-                loki_url: get_var("LOKI_URL").ok(),
                 server_port: get_var("SERVER_PORT").unwrap_or_else(|e| {
                     let error_reason = match e {
                         VarError::NotPresent => "Environment variable SERVER_PORT not found",

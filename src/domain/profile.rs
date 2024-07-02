@@ -66,22 +66,6 @@ pub mod profile {
             &self.username
         }
 
-        pub fn get_display_name(&self) -> &Option<String> {
-            &self.display_name
-        }
-
-        pub fn get_bio(&self) -> &Option<String> {
-            &self.bio
-        }
-
-        pub fn get_banner(&self) -> &Option<String> {
-            &self.banner
-        }
-
-        pub fn get_profile_picture(&self) -> &Option<String> {
-            &self.profile_picture
-        }
-
         pub fn get_user_id(&self) -> String {
             self.user_id.clone()
         }
