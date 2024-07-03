@@ -73,7 +73,8 @@ pub mod user {
             Self::verify_password(&self.password, password)
         }
 
-        // Valid email test (OWASP Regex + maximum length of 60 graphemes
+        // Valid email test (OWASP Regex + maximum length of 60 graphemes)
+        // todo unit tests
         pub fn validate_email(email: &str) -> Result<(), UserDomainError> {
             let graphemes = email.graphemes(true);
             let mut count = 0;
@@ -94,6 +95,7 @@ pub mod user {
             Ok(())
         }
 
+        // todo unit tests
         pub fn validate_password(password: &str) -> Result<(), UserDomainError> {
             let password_length = password.graphemes(true).count();
 
@@ -139,6 +141,7 @@ pub mod user {
             Ok(PasswordChangedEvent::new(self.id.clone(), datetime_changed))
         }
 
+        // todo unit tests
         fn hash_password(cleartext_password: &str) -> Result<String, UserDomainError> {
             let password_salt = SaltString::generate(&mut OsRng);
             ARGON2_HASHER
@@ -147,6 +150,7 @@ pub mod user {
                 .map_err(|e| UserDomainError::UnexpectedError(e.into()))
         }
 
+        // todo unit tests
         fn verify_password(password_hash: &str, password_cleartext: &str) -> Result<(), UserDomainError> {
             let parsed_hash = PasswordHash::new(password_hash)
                 .map_err(|e| UserDomainError::UnexpectedError(e.into()))?;

@@ -48,6 +48,7 @@ pub mod profile {
 
         // Valid username test
         // (alphanumerical, optionally a dash surrounded by alphanumerical characters, 15 character limit)
+        // todo unit tests
         pub fn validate_username(username: &str) -> Result<(), ProfileDomainError> {
             let username_count = username.graphemes(true).count();
 
