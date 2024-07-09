@@ -24,6 +24,12 @@ pub mod user {
         pub email: String,
         pub password: String,
         pub role: String,
+        pub password_resets: Vec<ResetPasswordRequest>,
+    }
+
+    pub struct ResetPasswordRequest {
+        pub token: String,
+        pub datetime: i64,
     }
 
     #[derive(Debug, Error, ErrorEnum)]
@@ -62,6 +68,7 @@ pub mod user {
                 email,
                 password,
                 role: "user".to_string(),
+                password_resets: Vec::new()
             };
 
             let profile = Profile::register(username, id)?;

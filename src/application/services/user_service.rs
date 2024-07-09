@@ -106,6 +106,12 @@ impl UserProfileService {
         Ok((profile.get_id(), session_id))
     }
 
+    pub async fn request_reset_password(&self, email: &str) -> Result<(), UserProfileServiceError> {
+        User::validate_email(email)?;
+
+        todo!()
+    }
+
     pub async fn reset_password(&self, email: &str, old_password: &str, new_password: String) -> Result<(), UserProfileServiceError> {
         User::validate_password(&new_password)?;
 
@@ -114,7 +120,7 @@ impl UserProfileService {
         let event = user.reset_password(old_password, &new_password)?;
 
         self.transaction_manager.transaction(|| async {
-            self.user_repository.set_password(&user).await?;
+            self.user_repository.save(&user).await?;
             self.outbox_repository.insert(event.into()).await?;
             Ok::<(), UserProfileServiceError>(())
         }).await??;

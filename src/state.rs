@@ -13,7 +13,7 @@ use crate::application::services::profile_service::ProfileService;
 use crate::application::services::user_service::UserProfileService;
 use crate::environment::Environment;
 use crate::infrastructure::database::repositories::profile_repository::PostgresProfileRepository;
-use crate::infrastructure::database::repositories::user_repository::PostgresTokioUserRepository;
+use crate::infrastructure::database::repositories::user_repository::TokioPostgresUserRepository;
 use crate::infrastructure::database::TokioPostgresMigrationRunner;
 use crate::infrastructure::GrpcAuthConnector;
 
@@ -77,7 +77,7 @@ pub async fn create_state(env: &Environment) -> Result<ServerState, anyhow::Erro
     // Initialize repositories
     let migration_runner = Box::new(TokioPostgresMigrationRunner::new(db_pool.clone()));
     let transaction_starter = TransactionManager::new(TransactionBackend::PostgresTokio(db_pool.clone()));
-    let user_repository = PostgresTokioUserRepository::new(db_pool.clone());
+    let user_repository = TokioPostgresUserRepository::new(db_pool.clone());
     let profile_repository = PostgresProfileRepository::new(db_pool);
     let outbox_repository = TokioPostgresOutbox::new();
 

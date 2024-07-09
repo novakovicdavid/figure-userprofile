@@ -65,3 +65,9 @@ futures-util = "0.3.30"
 
 [build-dependencies]
 tonic-build = "0.11.0"
+
+[patch."ssh://git@github.com/novakovicdavid/figure-lib.git"]
+figure-lib = { path = "../figure-lib" }
+
+[patch."https://github.com/novakovicdavid/error-conversion-macro.git"]
+error-conversion-macro = { path = "../error_conversion_macro" }

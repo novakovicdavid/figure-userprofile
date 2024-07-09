@@ -2,9 +2,10 @@ pub use profile_repository::PostgresProfileRepository;
 
 mod profile_repository {
     use async_trait::async_trait;
-    use deadpool_postgres::{GenericClient, Object, Pool};
+    use deadpool_postgres::{GenericClient, Pool};
+    use figure_lib::get_tokio_postgres_executor;
     use figure_lib::rdbs::postgres::tokio_postgres::TokioPostgresTransaction;
-    use tokio_postgres::GenericClient as OtherGenericClient;
+    use tokio_postgres::{Client, GenericClient as OtherGenericClient};
     use tokio_postgres::types::ToSql;
 
     use crate::application::errors::RepositoryError;
@@ -28,27 +29,14 @@ mod profile_repository {
     #[async_trait]
     impl ProfileRepositoryTrait for PostgresProfileRepository {
         async fn create(&self, profile: &Profile) -> Result<(), RepositoryError> {
-            let transaction = TokioPostgresTransaction::get_current_transaction();
-            let conn;
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let lock;
-            let executor = match &transaction {
-                Some(txn) => {
-                    lock = txn.lock().await;
-                    lock.client()
-                }
-                None => {
-                    conn = self.pool.get().await?;
-                    conn.client()
-                }
-            };
-
-            let statement = executor.prepare(r#"
+            let statement = client.prepare(r#"
             INSERT INTO profile (id, username, user_id)
             VALUES ($1, $2, $3)
             "#).await?;
 
-            executor.execute(&statement, &[
+            client.execute(&statement, &[
                 &profile.get_id(),
                 &profile.get_username(),
                 &profile.get_user_id()
@@ -58,39 +46,39 @@ mod profile_repository {
         }
 
         async fn find_by_id(&self, profile_id: String) -> Result<Profile, RepositoryError> {
-            let conn = self.pool.get().await?;
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let statement = conn.prepare_cached(r#"
+            let statement = client.prepare(r#"
             SELECT * FROM profile WHERE id = $1
             "#).await?;
 
-            Self::find_one(conn, statement, &[
+            Self::find_one(client, statement, &[
                 &profile_id,
             ]).await
         }
 
         async fn find_by_user_id(&self, user_id: String) -> Result<Profile, RepositoryError> {
-            let conn = self.pool.get().await?;
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let statement = conn.prepare_cached(r#"
+            let statement = client.prepare(r#"
             SELECT * FROM profile WHERE user_id = $1
             "#).await?;
 
-            Self::find_one(conn, statement, &[
+            Self::find_one(client, statement, &[
                 &user_id,
             ]).await
         }
 
         async fn update_profile_by_id(&self, profile_id: String, display_name: Option<String>, bio: Option<String>) -> Result<(), RepositoryError> {
-            let conn = self.pool.get().await?;
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let statement = conn.prepare_cached(r#"
+            let statement = client.prepare(r#"
             UPDATE profile
             SET display_name = $1, bio = $2,
             WHERE id = $3
             "#).await?;
 
-            conn.execute(&statement, &[
+            client.execute(&statement, &[
                 &display_name,
                 &bio,
                 &profile_id
@@ -100,13 +88,13 @@ mod profile_repository {
         }
 
         async fn get_total_profiles_count(&self) -> Result<i64, RepositoryError> {
-            let conn = self.pool.get().await?;
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let statement = conn.prepare_cached(r#"
+            let statement = client.prepare(r#"
             SELECT count(*) FROM profile
             "#).await?;
 
-            let count = conn.query_one(&statement, &[])
+            let count = client.query_one(&statement, &[])
                 .await?
                 .try_get::<usize, i64>(0)?;
 
@@ -115,11 +103,11 @@ mod profile_repository {
     }
 
     impl PostgresProfileRepository {
-        async fn find_one(conn: Object,
+        async fn find_one(client: &Client,
                           statement: tokio_postgres::Statement,
                           parameters: &[&(dyn ToSql + Sync)]) -> Result<Profile, RepositoryError>
         {
-            let result = conn.query_opt(&statement, parameters).await?;
+            let result = client.query_opt(&statement, parameters).await?;
 
             let row = match result {
                 Some(row) => row,

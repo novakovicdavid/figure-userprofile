@@ -653,7 +653,6 @@ dependencies = [
 [[package]]
 name = "error-conversion-macro"
 version = "0.1.0"
-source = "git+https://github.com/novakovicdavid/error-conversion-macro.git#88960830fd3f71af6b0bfb87ddf487adcfbd1d8c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -681,7 +680,6 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 [[package]]
 name = "figure-lib"
 version = "0.1.0"
-source = "git+ssh://git@github.com/novakovicdavid/figure-lib.git#cc3d4eb4341f094af84c93a2ea14890f76d9b307"
 dependencies = [
  "anyhow",
     "async-nats",

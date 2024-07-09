@@ -1,50 +1,36 @@
-pub use user_repository::PostgresTokioUserRepository;
+use async_trait::async_trait;
+use deadpool_postgres::Pool;
+use figure_lib::get_tokio_postgres_executor;
+use figure_lib::rdbs::postgres::tokio_postgres::TokioPostgresTransaction;
+use tokio_postgres::{GenericClient, Row};
 
-mod user_repository {
-    use async_trait::async_trait;
-    use deadpool_postgres::Pool;
-    use figure_lib::rdbs::postgres::tokio_postgres::TokioPostgresTransaction;
-    use tokio_postgres::GenericClient;
+use crate::application::errors::RepositoryError;
+use crate::application::repository_traits::user_repository::UserRepositoryTrait;
+use crate::domain::User;
+use crate::domain::user::user::ResetPasswordRequest;
+use crate::infrastructure::database::entities::{ResetPasswordRequestEntity, UserEntity};
 
-    use crate::application::errors::RepositoryError;
-    use crate::application::repository_traits::user_repository::UserRepositoryTrait;
-    use crate::domain::User;
-    use crate::infrastructure::database::entities::UserEntity;
-
-    pub struct PostgresTokioUserRepository {
+pub struct TokioPostgresUserRepository {
         pool: Pool,
     }
 
-    impl PostgresTokioUserRepository {
+impl TokioPostgresUserRepository {
         pub fn new(pool: Pool) -> Self {
             Self { pool }
         }
     }
 
     #[async_trait]
-    impl UserRepositoryTrait for PostgresTokioUserRepository {
+    impl UserRepositoryTrait for TokioPostgresUserRepository {
         async fn insert(&self, user: &User) -> Result<(), RepositoryError> {
-            let transaction = TokioPostgresTransaction::get_current_transaction();
-            let conn;
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let lock;
-            let executor = match &transaction {
-                Some(txn) => {
-                    lock = txn.lock().await;
-                    lock.client()
-                }
-                None => {
-                    conn = self.pool.get().await?;
-                    conn.client()
-                }
-            };
-
-            let statement = executor.prepare(r#"
+            let user_statement = client.prepare(r#"
             INSERT INTO "user" (id, email, password, role)
             VALUES ($1, $2, $3, $4)
             "#).await?;
 
-            executor.execute(&statement, &[
+            client.execute(&user_statement, &[
                 &user.get_id(),
                 &user.get_email(),
                 &user.get_password(),
@@ -55,28 +41,16 @@ mod user_repository {
         }
 
         async fn find_one_by_email(&self, email: &str) -> Result<User, RepositoryError> {
-            let transaction = TokioPostgresTransaction::get_current_transaction();
-            let conn;
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let lock;
-            let executor = match &transaction {
-                Some(txn) => {
-                    lock = txn.lock().await;
-                    lock.client()
-                }
-                None => {
-                    conn = self.pool.get().await?;
-                    conn.client()
-                }
-            };
-
-            let statement = executor.prepare(r#"
-            SELECT id, email, password, role
+            let statement = client.prepare(r#"
+            SELECT
+            id, email, password, role
             FROM "user"
             WHERE email = $1
             "#).await?;
 
-            let result = executor.query_opt(&statement, &[
+            let result = client.query_opt(&statement, &[
                 &email
             ]).await?;
 
@@ -86,33 +60,51 @@ mod user_repository {
             };
 
             let entity = UserEntity::try_from(row)?;
+            let mut user = User::from(entity);
 
-            Ok(entity.into())
+            let password_resets_statement = client.prepare(r#"
+            SELECT user_id, token, datetime FROM password_reset_request
+            WHERE user_id = $1
+            FOR UPDATE
+            "#).await?;
+
+            let password_reset_requests_rows = client
+                .query(&password_resets_statement, &[&user.id])
+                .await?;
+
+            let password_reset_requests = Self
+            ::process_password_reset_request_rows(password_reset_requests_rows).await?;
+
+            for password_reset in password_reset_requests {
+                user.password_resets.push(password_reset);
+            }
+
+            Ok(user)
         }
 
-        async fn find_by_id(&self, id: i64) -> Result<User, RepositoryError> {
-            let transaction = TokioPostgresTransaction::get_current_transaction();
-            let conn;
+        async fn find_by_id(&self, user_id: &str) -> Result<User, RepositoryError> {
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let lock;
-            let executor = match &transaction {
-                Some(txn) => {
-                    lock = txn.lock().await;
-                    lock.client()
-                }
-                None => {
-                    conn = self.pool.get().await?;
-                    conn.client()
-                }
-            };
+            let password_resets_statement = client.prepare(r#"
+            SELECT user_id, token, datetime FROM password_reset_request
+            WHERE user_id = $1
+            FOR UPDATE
+            "#).await?;
 
-            let statement = executor.prepare(r#"
+            let password_reset_requests_rows = client
+                .query(&password_resets_statement, &[&user_id])
+                .await?;
+
+            let password_reset_requests = Self
+            ::process_password_reset_request_rows(password_reset_requests_rows).await?;
+
+            let statement = client.prepare(r#"
             SELECT * FROM profile WHERE id = $1
             "#).await?;
 
-            let result = executor.query_opt(&statement, &[
-                &id
-            ]).await?;
+            let result = client
+                .query_opt(&statement, &[&user_id])
+                .await?;
 
             let row = match result {
                 Some(row) => row,
@@ -121,37 +113,48 @@ mod user_repository {
 
             let entity = UserEntity::try_from(row)?;
 
-            Ok(entity.into())
+            let mut user: User = entity.into();
+
+            for password_reset in password_reset_requests {
+                user.password_resets.push(password_reset);
+            }
+
+            Ok(user)
         }
 
-        async fn set_password(&self, user: &User) -> Result<(), RepositoryError> {
-            let transaction = TokioPostgresTransaction::get_current_transaction();
-            let conn;
+        async fn save(&self, user: &User) -> Result<(), RepositoryError> {
+            get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
-            let lock;
-            let executor = match &transaction {
-                Some(txn) => {
-                    lock = txn.lock().await;
-                    lock.client()
-                }
-                None => {
-                    conn = self.pool.get().await?;
-                    conn.client()
-                }
-            };
-
-            let statement = executor.prepare(r#"
+            let statement = client.prepare(r#"
             UPDATE "user"
-            SET password = $1
-            WHERE id = $2
+            SET email = $2, password = $3, role = $4
+            WHERE id = $1
             "#).await?;
 
-            executor.query_opt(&statement, &[
+            client.execute(&statement, &[
+                &user.id,
+                &user.email,
                 &user.password,
-                &user.id
+                &user.role
             ]).await?;
 
             Ok(())
         }
+    }
+
+impl TokioPostgresUserRepository {
+    async fn process_password_reset_request_rows(rows: Vec<Row>) -> Result<Vec<ResetPasswordRequest>, RepositoryError> {
+        let password_reset_requests = rows
+            .into_iter()
+            .map(|row| ResetPasswordRequestEntity::try_from(row))
+            .collect::<Vec<_>>();
+
+        let mut vec = Vec::new();
+
+        for password_reset in password_reset_requests {
+            vec.push(ResetPasswordRequest::from(password_reset?));
+        }
+
+        Ok(vec)
     }
 }
