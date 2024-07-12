@@ -2,11 +2,11 @@ use error_conversion_macro::ErrorEnum;
 use thiserror::Error;
 
 use crate::application::errors::RepositoryError;
-use crate::application::repository_traits::profile_repository::ProfileRepositoryTrait;
+use crate::application::repository_traits::read::profile_repository::ProfileRepository;
 use crate::domain::Profile;
 
 pub struct ProfileService {
-    profile_repository: Box<dyn ProfileRepositoryTrait>,
+    profile_repository: Box<dyn ProfileRepository>,
 }
 
 #[derive(Debug, ErrorEnum, Error)]
@@ -19,7 +19,7 @@ pub enum ProfileServiceError {
 }
 
 impl ProfileService {
-    pub fn new(profile_repository: Box<dyn ProfileRepositoryTrait>) -> Self {
+    pub fn new(profile_repository: Box<dyn ProfileRepository>) -> Self {
         Self {
             profile_repository,
         }

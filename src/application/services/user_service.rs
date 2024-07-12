@@ -7,16 +7,16 @@ use tracing::log::error;
 
 use crate::application::connectors::auth_connector::{AuthConnector, AuthConnectorError};
 use crate::application::errors::RepositoryError;
-use crate::application::repository_traits::profile_repository::ProfileRepositoryTrait;
-use crate::application::repository_traits::user_repository::UserRepositoryTrait;
+use crate::application::repository_traits::read::profile_repository::ProfileRepository;
+use crate::application::repository_traits::read::user_repository::UserRepository;
 use crate::domain::{Profile, User};
 use crate::domain::profile::ProfileDomainError;
 use crate::domain::user::UserDomainError;
 
 pub struct UserProfileService {
     transaction_manager: TransactionManager,
-    user_repository: Box<dyn UserRepositoryTrait>,
-    profile_repository: Box<dyn ProfileRepositoryTrait>,
+    user_repository: Box<dyn UserRepository>,
+    profile_repository: Box<dyn ProfileRepository>,
     outbox_repository: Box<dyn Outbox>,
     auth_connector: Box<dyn AuthConnector>,
 }
@@ -48,8 +48,8 @@ pub enum UserProfileServiceError {
 
 impl UserProfileService {
     pub fn new(transaction_manager: TransactionManager,
-               user_repository: Box<dyn UserRepositoryTrait>,
-               profile_repository: Box<dyn ProfileRepositoryTrait>,
+               user_repository: Box<dyn UserRepository>,
+               profile_repository: Box<dyn ProfileRepository>,
                outbox_repository: Box<dyn Outbox>,
                auth_connector: Box<dyn AuthConnector>) -> Self {
         UserProfileService {

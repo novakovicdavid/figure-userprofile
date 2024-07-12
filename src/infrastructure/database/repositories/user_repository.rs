@@ -5,7 +5,7 @@ use figure_lib::rdbs::postgres::tokio_postgres::TokioPostgresTransaction;
 use tokio_postgres::{GenericClient, Row};
 
 use crate::application::errors::RepositoryError;
-use crate::application::repository_traits::user_repository::UserRepositoryTrait;
+use crate::application::repository_traits::read::user_repository::UserRepository;
 use crate::domain::User;
 use crate::domain::user::user::ResetPasswordRequest;
 use crate::infrastructure::database::entities::{ResetPasswordRequestEntity, UserEntity};
@@ -21,7 +21,7 @@ impl TokioPostgresUserRepository {
     }
 
     #[async_trait]
-    impl UserRepositoryTrait for TokioPostgresUserRepository {
+    impl UserRepository for TokioPostgresUserRepository {
         async fn insert(&self, user: &User) -> Result<(), RepositoryError> {
             get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
@@ -76,7 +76,7 @@ impl TokioPostgresUserRepository {
             ::process_password_reset_request_rows(password_reset_requests_rows).await?;
 
             for password_reset in password_reset_requests {
-                user.password_resets.push(password_reset);
+                user.password_reset_requests.push(password_reset);
             }
 
             Ok(user)
@@ -99,7 +99,10 @@ impl TokioPostgresUserRepository {
             ::process_password_reset_request_rows(password_reset_requests_rows).await?;
 
             let statement = client.prepare(r#"
-            SELECT * FROM profile WHERE id = $1
+            SELECT
+            id, email, password, role
+            FROM "user"
+            WHERE id = $1
             "#).await?;
 
             let result = client
@@ -116,7 +119,7 @@ impl TokioPostgresUserRepository {
             let mut user: User = entity.into();
 
             for password_reset in password_reset_requests {
-                user.password_resets.push(password_reset);
+                user.password_reset_requests.push(password_reset);
             }
 
             Ok(user)
@@ -137,6 +140,42 @@ impl TokioPostgresUserRepository {
                 &user.password,
                 &user.role
             ]).await?;
+
+            let statement = client.prepare(r#"
+            DELETE FROM password_reset_request
+            WHERE user_id = $1
+            "#).await?;
+
+            client.execute(&statement, &[&user.id]).await?;
+
+            let mut statement = r#"
+            INSERT INTO password_reset_request
+            (user_id, token, datetime)
+            VALUES
+            "#.to_string();
+
+            let mut parameters = Vec::new();
+
+            for (index, password_reset_request) in user.password_reset_requests.iter().enumerate() {
+                parameters.push(user.id.clone());
+                parameters.push(password_reset_request.token.clone());
+                parameters.push(password_reset_request.datetime.to_string());
+
+                statement = format!("{} ({}, {}, {}){}", statement,
+                                    parameters.len() - 2,
+                                    parameters.len() - 1,
+                                    parameters.len(),
+                                    match user.password_reset_requests.len() != (index + 1) {
+                                        true => ",",
+                                        false => ";"
+                                    }
+                );
+            }
+
+            // let slice_of_refs: &[&String] = &parameters.iter().collect::<Vec<_>>()[..];
+            let parameters = parameters.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
+
+            client.execute(&statement, parameters.as_slice()).await?;
 
             Ok(())
         }

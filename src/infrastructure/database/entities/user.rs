@@ -41,7 +41,7 @@ mod user_entity {
                 email: entity.email,
                 password: entity.password,
                 role: entity.role,
-                password_resets: Vec::new(),
+                password_reset_requests: Vec::new(),
             }
         }
     }

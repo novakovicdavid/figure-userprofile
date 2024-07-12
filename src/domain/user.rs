@@ -7,7 +7,7 @@ pub mod user {
     use argon2::{PasswordHash, PasswordHasher, PasswordVerifier};
     use argon2::password_hash::{Error, SaltString};
     use error_conversion_macro::ErrorEnum;
-    use figure_lib::queue::events::user::PasswordChangedEvent;
+    use figure_lib::queue::integration::events::user::PasswordChangedEvent;
     use lazy_static::lazy_static;
     use rand_core::OsRng;
     use regex::Regex;
@@ -24,7 +24,7 @@ pub mod user {
         pub email: String,
         pub password: String,
         pub role: String,
-        pub password_resets: Vec<ResetPasswordRequest>,
+        pub password_reset_requests: Vec<ResetPasswordRequest>,
     }
 
     pub struct ResetPasswordRequest {
@@ -68,7 +68,7 @@ pub mod user {
                 email,
                 password,
                 role: "user".to_string(),
-                password_resets: Vec::new()
+                password_reset_requests: Vec::new()
             };
 
             let profile = Profile::register(username, id)?;

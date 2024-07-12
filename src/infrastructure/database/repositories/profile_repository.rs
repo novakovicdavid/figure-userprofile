@@ -9,7 +9,7 @@ mod profile_repository {
     use tokio_postgres::types::ToSql;
 
     use crate::application::errors::RepositoryError;
-    use crate::application::repository_traits::profile_repository::ProfileRepositoryTrait;
+    use crate::application::repository_traits::read::profile_repository::ProfileRepository;
     use crate::domain::Profile;
     use crate::infrastructure::database::entities::ProfileEntity;
 
@@ -27,7 +27,7 @@ mod profile_repository {
     }
 
     #[async_trait]
-    impl ProfileRepositoryTrait for PostgresProfileRepository {
+    impl ProfileRepository for PostgresProfileRepository {
         async fn create(&self, profile: &Profile) -> Result<(), RepositoryError> {
             get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
