@@ -26,6 +26,7 @@ mod auth_connector {
 
     impl GrpcAuthConnector {
         pub async fn connect(host: String, port: u16) -> Result<Self, anyhow::Error> {
+            // todo http or https
             let endpoint = Endpoint::from_str(&format!("http://{host}:{port}"))?;
 
             let channel = endpoint.connect().await?;
