@@ -5,12 +5,13 @@ mod user_entity {
 
     use crate::application::errors::RepositoryError;
     use crate::domain::User;
+    use crate::domain::user::user::ResetPasswordRequest;
 
     pub struct UserEntity {
-        id: String,
-        email: String,
-        password: String,
-        role: String,
+        pub id: String,
+        pub email: String,
+        pub password: String,
+        pub role: String,
     }
 
     impl TryFrom<Row> for UserEntity {
@@ -34,15 +35,15 @@ mod user_entity {
         }
     }
 
-    impl From<UserEntity> for User {
-        fn from(entity: UserEntity) -> Self {
-            Self {
-                id: entity.id,
-                email: entity.email,
-                password: entity.password,
-                role: entity.role,
-                password_reset_requests: Vec::new(),
-            }
+    impl UserEntity {
+        pub fn into_user(self, reset_password_requests: Vec<ResetPasswordRequest>) -> User {
+            User::new(
+                self.id,
+                self.email,
+                self.password,
+                self.role,
+                reset_password_requests,
+            )
         }
     }
 }

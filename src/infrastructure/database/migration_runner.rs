@@ -4,7 +4,7 @@ pub mod postgres_tokio_migration_runner {
     use async_trait::async_trait;
     use deadpool_postgres::Pool;
 
-    use crate::application::ApplicationError;
+    use crate::application::errors::ApplicationError;
     use crate::application::migration_runner_trait::MigrationRunner;
 
     mod embedded {

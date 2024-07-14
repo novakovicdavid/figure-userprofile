@@ -5,9 +5,9 @@ use http::StatusCode;
 use serde::Serialize;
 use tracing::log::error;
 
-use crate::application::ApplicationError;
 use crate::application::connectors::auth_connector::AuthConnectorError;
 use crate::application::errors::{RepositoryError, RouteError};
+use crate::application::errors::ApplicationError;
 use crate::application::services::profile_service::ProfileServiceError;
 use crate::application::services::user_service::UserProfileServiceError;
 use crate::domain::profile::ProfileDomainError;
@@ -55,6 +55,9 @@ impl IntoHttpStatusCode for UserDomainError {
             UserDomainError::PasswordTooShort => 400,
             UserDomainError::PasswordTooLong => 400,
             UserDomainError::PasswordWrong => 400,
+            UserDomainError::TooManyPasswordResetsRequested => 429,
+            UserDomainError::InvalidPasswordResetToken => 400,
+            UserDomainError::PasswordResetTokenExpired => 410,
             UserDomainError::ProfileDomainError(e) => e.status_code(),
         }
     }
@@ -79,6 +82,7 @@ impl IntoHttpStatusCode for UserProfileServiceError {
             UserProfileServiceError::RepositoryError(e) => e.status_code(),
             UserProfileServiceError::TransactionError(e) => e.status_code(),
             UserProfileServiceError::AuthConnectorError(e) => e.status_code(),
+            UserProfileServiceError::RouterError(e) => e.status_code(),
         }
     }
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, Router};
-use axum::extract::State;
+use axum::extract::{ConnectInfo, State};
 use axum::response::IntoResponse;
 use axum::routing::post;
 use cookie::{Cookie, SameSite};
@@ -10,14 +10,15 @@ use serde::Deserialize;
 use serde::Serialize;
 use tower_cookies::Cookies;
 
-use crate::application::ApplicationError;
+use crate::application::errors::ApplicationError;
 use crate::application::miscellaneous::ToJsonString;
+use crate::application::routes::ConnectionInfo;
+use crate::application::state::ServerState;
 use crate::infrastructure::session::SessionOption;
-use crate::state::ServerState;
 
 pub fn user_router() -> Router<Arc<ServerState>> {
     Router::new()
-        .route("/user/request-reset-password", post(reset_password))
+        .route("/user/request-reset-password", post(request_reset_password))
         .route("/user/reset-password", post(reset_password))
         .route("/user/signup", post(sign_up))
         .route("/user/signin", post(sign_in))
@@ -83,23 +84,24 @@ fn create_session_cookie(domain: String, session: String) -> Cookie<'static> {
     cookie
 }
 
+#[derive(Deserialize)]
 pub struct RequestResetPasswordRequest {
     pub email: String,
 }
 
 pub async fn request_reset_password(State(server_state): State<Arc<ServerState>>,
+                                    ConnectInfo(info): ConnectInfo<ConnectionInfo>,
                                     Json(request): Json<RequestResetPasswordRequest>)
                                     -> impl IntoResponse
 {
-    todo!();
-    // server_state.user_service.request_reset_password(email)
-    //     .await
+    server_state.user_service.request_reset_password(&request.email, info.remote_addr.to_string())
+        .await
+        .map_err(ApplicationError::from)
 }
 
 #[derive(Deserialize)]
 pub struct ResetPasswordRequest {
-    pub email: String,
-    pub old_password: String,
+    pub token: String,
     pub new_password: String,
 }
 
@@ -107,7 +109,7 @@ pub async fn reset_password(State(server_state): State<Arc<ServerState>>,
                             Json(reset): Json<ResetPasswordRequest>)
                             -> impl IntoResponse
 {
-    server_state.user_service.reset_password(&reset.email, &reset.old_password, reset.new_password)
+    server_state.user_service.reset_password(&reset.token, &reset.new_password)
         .await
         .map_err(ApplicationError::from)
 }

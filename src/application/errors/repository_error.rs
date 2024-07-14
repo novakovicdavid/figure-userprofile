@@ -16,7 +16,7 @@ impl From<tokio_postgres::Error> for RepositoryError {
     fn from(value: tokio_postgres::Error) -> Self {
         if let Some(db_error) = value.as_db_error() {
             if let Some(_constraint) = db_error.constraint() {
-                return RepositoryError::ConstraintConflict
+                return RepositoryError::ConstraintConflict;
             }
         }
 
@@ -30,8 +30,8 @@ impl From<deadpool_postgres::PoolError> for RepositoryError {
     }
 }
 
-#[derive(Debug, Error)]
-pub enum RouteError {
-    #[error("invalid-multipart")]
-    InvalidMultipart,
+impl From<sea_query::error::Error> for RepositoryError {
+    fn from(value: sea_query::error::Error) -> Self {
+        Self::UnexpectedError(value.into())
+    }
 }

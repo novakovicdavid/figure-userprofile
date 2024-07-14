@@ -1,25 +1,22 @@
-use std::sync::Arc;
+use application::environment::Environment;
+use application::state::create_state;
 
-use crate::environment::Environment;
-use crate::infrastructure::http::server::start_server;
+use crate::infrastructure::http::server::start_http_server;
 use crate::infrastructure::logging::init_logging;
-use crate::state::create_state;
 
 mod domain;
 mod infrastructure;
 mod application;
-mod environment;
-mod state;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<(), anyhow::Error> {
+async fn main() {
     init_logging("INFO", "WARN").unwrap();
 
-    let environment = Environment::new()?;
+    let environment = Environment::new().unwrap();
 
-    let state = Arc::new(create_state(&environment).await?);
+    let state = create_state(&environment).await.unwrap();
 
-    state.migration_runner.run().await?;
+    state.migration_runner.run().await.unwrap();
 
-    start_server(&environment, state.clone()).await
+    start_http_server(&environment, state.clone()).await.unwrap()
 }

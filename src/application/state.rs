@@ -1,6 +1,9 @@
+use std::sync::Arc;
 use std::time::Instant;
 
 use deadpool_postgres::{Config, ManagerConfig, RecyclingMethod, Runtime};
+use figure_lib::queue::integration::domain_event_dispatcher::DomainEventDispatcher;
+use figure_lib::rdbs::outbox_repository::Outbox;
 use figure_lib::rdbs::postgres::tokio_postgres::outbox::TokioPostgresOutbox;
 use figure_lib::rdbs::transaction::postgres_transaction::{TransactionBackend, TransactionManager};
 use tokio::task;
@@ -8,10 +11,15 @@ use tokio_postgres::NoTls;
 use tracing::log::info;
 use url::Url;
 
+use crate::application::connectors::auth_connector::AuthConnector;
+use crate::application::domain_event_dispatcher::{DomainEvent, DomainEventDiscriminants};
+use crate::application::domain_event_handlers::user_created::password_reset_requested;
+use crate::application::environment::Environment;
 use crate::application::migration_runner_trait::MigrationRunner;
+use crate::application::repository_traits::read::profile_repository::ProfileRepository;
+use crate::application::repository_traits::read::user_repository::UserRepository;
 use crate::application::services::profile_service::ProfileService;
 use crate::application::services::user_service::UserProfileService;
-use crate::environment::Environment;
 use crate::infrastructure::database::repositories::profile_repository::PostgresProfileRepository;
 use crate::infrastructure::database::repositories::user_repository::TokioPostgresUserRepository;
 use crate::infrastructure::database::TokioPostgresMigrationRunner;
@@ -19,6 +27,7 @@ use crate::infrastructure::GrpcAuthConnector;
 
 pub struct ServerState {
     pub migration_runner: Box<dyn MigrationRunner>,
+    pub domain_dispatcher: Arc<DomainEventDispatcher<DomainEventDiscriminants, DomainEvent, Arc<DomainEventHandlerState>>>,
     pub user_service: UserProfileService,
     pub profile_service: ProfileService,
 
@@ -27,19 +36,27 @@ pub struct ServerState {
 
 impl ServerState {
     pub fn new(migration_runner: Box<dyn MigrationRunner>,
+               domain_dispatcher: Arc<DomainEventDispatcher<
+                   DomainEventDiscriminants,
+                   DomainEvent,
+                   Arc<DomainEventHandlerState>>>,
                user_service: UserProfileService,
                profile_service: ProfileService,
-               domain: String) -> Self {
-        Self {
-            migration_runner,
-            user_service,
-            profile_service,
-            domain,
-        }
+               domain: String)
+               -> Self {
+        Self { migration_runner, domain_dispatcher, user_service, profile_service, domain }
     }
 }
 
-pub async fn create_state(env: &Environment) -> Result<ServerState, anyhow::Error> {
+pub struct DomainEventHandlerState {
+    pub transaction_manager: TransactionManager,
+    pub user_repository: Box<dyn UserRepository>,
+    pub profile_repository: Box<dyn ProfileRepository>,
+    pub outbox_repository: Box<dyn Outbox>,
+    pub auth_connector: Box<dyn AuthConnector>,
+}
+
+pub async fn create_state(env: &Environment) -> Result<Arc<ServerState>, anyhow::Error> {
     info!("Connecting to database...");
 
     let database_url = env.database_url.clone();
@@ -81,9 +98,22 @@ pub async fn create_state(env: &Environment) -> Result<ServerState, anyhow::Erro
     let profile_repository = PostgresProfileRepository::new(db_pool);
     let outbox_repository = TokioPostgresOutbox::new();
 
+    let domain_event_dispatcher: DomainEventDispatcher<DomainEventDiscriminants, DomainEvent, _> =
+        DomainEventDispatcher::new(Arc::new(DomainEventHandlerState {
+            transaction_manager: transaction_starter.clone(),
+            user_repository: Box::new(user_repository.clone()),
+            profile_repository: Box::new(profile_repository.clone()),
+            outbox_repository: Box::new(outbox_repository.clone()),
+            auth_connector: Box::new(auth_connector.clone()),
+        }))
+            .register(password_reset_requested);
+
+    let domain_event_dispatcher = Arc::new(domain_event_dispatcher);
+
     // Initialize services
-    let user_profile_service = UserProfileService::new(
-        transaction_starter.clone(), Box::new(user_repository),
+    let user_service = UserProfileService::new(
+        transaction_starter.clone(), domain_event_dispatcher.clone(),
+        Box::new(user_repository),
         Box::new(profile_repository.clone()),
         Box::new(outbox_repository),
         Box::new(auth_connector));
@@ -91,5 +121,5 @@ pub async fn create_state(env: &Environment) -> Result<ServerState, anyhow::Erro
     let profile_service = ProfileService::new(Box::new(profile_repository));
 
     // Resulting state
-    Ok(ServerState::new(migration_runner, user_profile_service, profile_service, domain))
+    Ok(Arc::new(ServerState::new(migration_runner, domain_event_dispatcher, user_service, profile_service, domain)))
 }

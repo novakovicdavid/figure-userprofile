@@ -42,10 +42,12 @@ prost = "0.12.3"
 
 # Data
 redis = { version = "0.24.0", features = ["tokio-comp", "tokio-rustls-comp", "connection-manager"] }
-tokio-postgres = "0.7.10"
+tokio-postgres = { version = "0.7.10", features = ["with-time-0_3"] }
 deadpool-postgres = "0.14.0"
 refinery = { version = "0.8.14", features = ["tokio-postgres"] }
 barrel = { version = "0.7.0", features = ["pg"] }
+sea-query = { version = "0.30.7", features = ["thread-safe", "with-time"] }
+sea-query-postgres = { version = "0.4.0", features = ["with-time"] }
 
 # Security
 argon2 = { version = "0.5.3", features = ["std"] }
@@ -64,6 +66,7 @@ error-conversion-macro = { git = "https://github.com/novakovicdavid/error-conver
 futures-util = "0.3.30"
 strum = "0.26"
 strum_macros = "0.26"
+time = "0.3.36"
 
 [build-dependencies]
 tonic-build = "0.11.0"

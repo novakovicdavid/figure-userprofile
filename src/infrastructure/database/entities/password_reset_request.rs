@@ -1,25 +1,27 @@
+use time::{OffsetDateTime, PrimitiveDateTime};
 use tokio_postgres::Row;
 
 use crate::application::errors::RepositoryError;
 use crate::domain::user::user::ResetPasswordRequest;
 
 pub struct ResetPasswordRequestEntity {
-    user_id: String,
     token: String,
-    datetime: i64,
+    user_id: String,
+    datetime: OffsetDateTime,
 }
 
 impl TryFrom<Row> for ResetPasswordRequestEntity {
     type Error = RepositoryError;
 
     fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let user_id = value.try_get("user_id")?;
         let token = value.try_get("token")?;
-        let datetime = value.try_get("datetime")?;
+        let user_id = value.try_get("user_id")?;
+        let datetime = value.try_get::<_, PrimitiveDateTime>("datetime")?
+            .assume_utc();
 
         Ok(Self {
-            user_id,
             token,
+            user_id,
             datetime,
         })
     }
@@ -27,9 +29,6 @@ impl TryFrom<Row> for ResetPasswordRequestEntity {
 
 impl From<ResetPasswordRequestEntity> for ResetPasswordRequest {
     fn from(value: ResetPasswordRequestEntity) -> Self {
-        Self {
-            token: value.token,
-            datetime: value.datetime,
-        }
+        Self::new(value.token, value.datetime)
     }
 }

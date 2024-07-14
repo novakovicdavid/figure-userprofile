@@ -2,7 +2,7 @@ pub use profile_repository::PostgresProfileRepository;
 
 mod profile_repository {
     use async_trait::async_trait;
-    use deadpool_postgres::{GenericClient, Pool};
+    use deadpool_postgres::Pool;
     use figure_lib::get_tokio_postgres_executor;
     use figure_lib::rdbs::postgres::tokio_postgres::TokioPostgresTransaction;
     use tokio_postgres::{Client, GenericClient as OtherGenericClient};
@@ -28,7 +28,7 @@ mod profile_repository {
 
     #[async_trait]
     impl ProfileRepository for PostgresProfileRepository {
-        async fn create(&self, profile: &Profile) -> Result<(), RepositoryError> {
+        async fn insert(&self, profile: &Profile) -> Result<(), RepositoryError> {
             get_tokio_postgres_executor!(|| async { self.pool.get().await }, client, txn, cnn, lock);
 
             let statement = client.prepare(r#"

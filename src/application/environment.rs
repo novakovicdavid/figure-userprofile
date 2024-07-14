@@ -3,7 +3,7 @@ use std::env::VarError;
 
 use tracing::log::{error, warn};
 
-use crate::application::ApplicationError;
+use crate::application::errors::ApplicationError;
 
 #[derive(Clone)]
 pub struct Environment {

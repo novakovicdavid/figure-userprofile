@@ -19,6 +19,7 @@ mod auth_connector {
 
     tonic::include_proto!("auth");
 
+    #[derive(Clone)]
     pub struct GrpcAuthConnector {
         client: AuthClient<InterceptedService<Channel, CorrelationIdInterceptor>>,
     }

@@ -8,11 +8,11 @@ use axum::routing::{get, post};
 use serde::Serialize;
 use tower_http::limit::RequestBodyLimitLayer;
 
-use crate::application::ApplicationError;
+use crate::application::errors::ApplicationError;
 use crate::application::errors::RouteError;
 use crate::application::miscellaneous::ToJsonString;
+use crate::application::state::ServerState;
 use crate::infrastructure::session::SessionOption;
-use crate::state::ServerState;
 
 pub fn profile_router() -> Router<Arc<ServerState>> {
     Router::new()

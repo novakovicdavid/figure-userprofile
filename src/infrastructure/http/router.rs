@@ -11,9 +11,9 @@ use tower_http::cors::{AllowOrigin, CorsLayer};
 
 use crate::application::routes::profile_routes::profile_router;
 use crate::application::routes::user_routes::user_router;
+use crate::application::state::ServerState;
 use crate::infrastructure::http::middleware::session_layer::session_extension;
 use crate::infrastructure::http::misc_routes::healthcheck;
-use crate::state::ServerState;
 
 pub fn create_router(server_state: Arc<ServerState>, cors: &String) -> Result<Router, anyhow::Error> {
     let cors_layer = create_cors_layer([cors.parse()?]);

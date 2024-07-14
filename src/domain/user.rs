@@ -2,34 +2,37 @@ pub use user::User;
 pub use user::UserDomainError;
 
 pub mod user {
-    use std::time::SystemTime;
+    use std::ops::Sub;
+    use std::time::Duration;
 
     use argon2::{PasswordHash, PasswordHasher, PasswordVerifier};
     use argon2::password_hash::{Error, SaltString};
     use error_conversion_macro::ErrorEnum;
-    use figure_lib::queue::integration::events::user::PasswordChangedEvent;
     use lazy_static::lazy_static;
-    use rand_core::OsRng;
+    use rand_chacha::ChaCha20Rng;
+    use rand_core::{OsRng, RngCore, SeedableRng};
     use regex::Regex;
     use thiserror::Error;
+    use time::OffsetDateTime;
     use unicode_segmentation::UnicodeSegmentation;
     use uuid::Uuid;
 
+    use crate::application::domain_event_dispatcher::{DomainEvent, PasswordResetRequested};
     use crate::domain::Profile;
     use crate::domain::profile::ProfileDomainError;
     use crate::infrastructure::secure_hasher::ARGON2_HASHER;
 
     pub struct User {
-        pub id: String,
-        pub email: String,
-        pub password: String,
-        pub role: String,
-        pub password_reset_requests: Vec<ResetPasswordRequest>,
+        id: String,
+        email: String,
+        password: String,
+        role: String,
+        password_reset_requests: Vec<ResetPasswordRequest>,
     }
 
     pub struct ResetPasswordRequest {
-        pub token: String,
-        pub datetime: i64,
+        token: String,
+        datetime: OffsetDateTime,
     }
 
     #[derive(Debug, Error, ErrorEnum)]
@@ -46,7 +49,13 @@ pub mod user {
         #[error("password-too-long")]
         PasswordTooLong,
         #[error("password-wrong")]
-        PasswordWrong
+        PasswordWrong,
+        #[error("too-many-password-resets-requested")]
+        TooManyPasswordResetsRequested,
+        #[error("invalid-password-reset-token")]
+        InvalidPasswordResetToken,
+        #[error("password-reset-token-expired")]
+        PasswordResetTokenExpired,
     }
 
     lazy_static! {
@@ -55,6 +64,11 @@ pub mod user {
     }
 
     impl User {
+        pub fn new(id: String, email: String, password: String, role: String,
+                   password_reset_requests: Vec<ResetPasswordRequest>) -> Self {
+            Self { id, email, password, role, password_reset_requests }
+        }
+
         pub fn register(email: String, password: String, username: String) -> Result<(Self, Profile), UserDomainError> {
             Self::validate_email(&email)?;
             Self::validate_password(&password)?;
@@ -78,6 +92,62 @@ pub mod user {
 
         pub fn login(&self, password: &str) -> Result<(), UserDomainError> {
             Self::verify_password(&self.password, password)
+        }
+
+        pub fn request_password_reset(&mut self, requester: String) -> Result<DomainEvent, UserDomainError> {
+            let mut recent_requests = 0;
+
+            let datetime_now = OffsetDateTime::now_utc();
+            let datetime_one_hour_ago = datetime_now
+                .sub(Duration::from_secs(60 * 60));
+
+            for request in &self.password_reset_requests {
+                if datetime_one_hour_ago.unix_timestamp() < request.datetime.unix_timestamp() {
+                    recent_requests += 1;
+                }
+
+                if recent_requests == 3 {
+                    return Err(UserDomainError::TooManyPasswordResetsRequested);
+                }
+            }
+
+            let token = ChaCha20Rng::from_entropy().next_u64().to_string();
+
+            self.password_reset_requests.push(ResetPasswordRequest {
+                token: token.clone(),
+                datetime: datetime_now,
+            });
+
+            Ok(PasswordResetRequested {
+                token,
+                email: self.email.clone(),
+                requester,
+                datetime: OffsetDateTime::now_utc(),
+            }.into())
+        }
+
+        pub fn reset_password_using_password_reset_token(&mut self, supplied_token: &str, new_password: &str) -> Result<(), UserDomainError> {
+            let found_token = match self.password_reset_requests
+                .iter().find(|request| request.token == supplied_token) {
+                None => return Err(UserDomainError::InvalidPasswordResetToken),
+                Some(token) => token
+            };
+
+            let one_hour_ago = OffsetDateTime::now_utc()
+                .sub(Duration::from_secs(60 * 60));
+
+            if found_token.datetime.unix_timestamp() < one_hour_ago.unix_timestamp() {
+                return Err(UserDomainError::PasswordResetTokenExpired);
+            }
+
+            Self::validate_password(&new_password)?;
+            let new_password = Self::hash_password(&new_password)?;
+            self.password = new_password;
+
+            self.password_reset_requests.clear();
+
+            // todo domain event
+            Ok(())
         }
 
         // Valid email test (OWASP Regex + maximum length of 60 graphemes)
@@ -133,21 +203,6 @@ pub mod user {
             &self.role
         }
 
-        pub fn reset_password(&mut self, old_password: &str, new_password: &str)
-                              -> Result<PasswordChangedEvent, UserDomainError> {
-            Self::verify_password(&self.password, old_password)?;
-            Self::validate_password(&new_password)?;
-
-            self.password = Self::hash_password(&new_password)?;
-
-            let datetime_changed = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .map_err(|e| UserDomainError::UnexpectedError(e.into()))?
-                .as_millis();
-
-            Ok(PasswordChangedEvent::new(self.id.clone(), datetime_changed))
-        }
-
         // todo unit tests
         fn hash_password(cleartext_password: &str) -> Result<String, UserDomainError> {
             let password_salt = SaltString::generate(&mut OsRng);
@@ -168,6 +223,24 @@ pub mod user {
                     Error::Password => UserDomainError::PasswordWrong,
                     _ => UserDomainError::UnexpectedError(e.into())
                 })
+        }
+
+        pub fn password_reset_requests(&self) -> &Vec<ResetPasswordRequest> {
+            &self.password_reset_requests
+        }
+    }
+
+    impl ResetPasswordRequest {
+        pub fn new(token: String, datetime: OffsetDateTime) -> Self {
+            Self { token, datetime }
+        }
+
+        pub fn token(&self) -> &str {
+            &self.token
+        }
+
+        pub fn datetime(&self) -> OffsetDateTime {
+            self.datetime
         }
     }
 }
